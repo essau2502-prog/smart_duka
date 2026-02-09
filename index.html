@@ -3,47 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Duka Pro</title>
+    <title>Smart Duka Live</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; }
         #loginPage { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
         .main-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 8px; margin: 10px; text-align: center; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
-        .btn-uza { background: #27ae60; color: white; padding: 15px; width: 100%; }
-        .btn-funga { background: #e67e22; color: white; padding: 10px; width: 100%; margin-top: 10px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; width: 100%; padding: 15px; margin-top: 10px; }
+        .btn-uza { background: #27ae60; color: white; }
+        .btn-download { background: #3498db; color: white; }
         .item-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        .btn-download { background: #3498db; color: white; padding: 10px; width: 100%; margin-top: 10px; }
-        .badge { background: #eee; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        .admin-only { display: none; background: #e74c3c; color: white; }
     </style>
 </head>
 <body>
 
     <div id="loginPage">
-        <h2 style="color: #2c3e50;">SMART DUKA 🏪</h2>
+        <h2>SMART DUKA LIVE 🏪</h2>
         <input type="text" id="username" style="width: 80%;" placeholder="Jina la mtumiaji">
         <input type="password" id="password" style="width: 80%;" placeholder="Neno la siri">
-        <button onclick="checkLogin()" style="width: 85%; padding: 15px; background: #2c3e50; color: white;">INGIA</button>
+        <button onclick="checkLogin()" style="width: 85%; background: #2c3e50; color: white;">INGIA</button>
         <p id="errorMsg" style="color: red;"></p>
     </div>
 
     <div id="mainApp" style="display: none;">
         <div class="header">
-            <h2 id="dukaName">SMART DUKA 🏪</h2>
-            <div id="userBadge" class="badge"></div>
+            <h2>SMART DUKA 🏪</h2>
+            <div id="userBadge" style="font-size: 0.8rem; background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 10px; border-radius: 10px;"></div>
         </div>
 
         <div class="total-box">
-            <div id="haliBiashara">Biashara Iko Wazi</div>
-            <div style="font-size: 2rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
+            <div>Jumla ya Mauzo Live</div>
+            <div style="font-size: 2.2rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
             <small id="tareheLeo"></small>
         </div>
 
-        <div class="main-card" id="sehemuYaKuuza">
-            <h3>Sajili Mauzo Magu</h3>
+        <div class="main-card">
+            <h3>Sajili Mauzo</h3>
             <input type="text" id="bidhaa" placeholder="Jina la bidhaa">
             <input type="number" id="bei" placeholder="Bei ya kitu kimoja">
             <input type="number" id="idadi" placeholder="Idadi" value="1">
@@ -51,106 +50,120 @@
         </div>
 
         <div class="main-card">
-            <h3>Orodha ya Mauzo (Session Hii)</h3>
-            <div id="orodhaMauzo"></div>
-            <button onclick="fungaBiashara()" id="btnFunga" class="btn-funga">FUNGA BIASHARA (Ripoti)</button>
+            <h3>Mauzo ya Leo</h3>
+            <div id="orodhaMauzo">Inapakia mauzo...</div>
             <button onclick="pakuaRipoti()" class="btn-download">PAKUA RIPOTI (CSV)</button>
+            <button id="futaZoteBtn" onclick="futaMauzoYote()" class="admin-only">FUTA MAUZO YOTE (ADMIN)</button>
         </div>
     </div>
 
-    <script>
-        let mauzo = JSON.parse(localStorage.getItem('mauzo')) || [];
-        let sessionActive = true;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        function checkLogin() {
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXG65JsQ2pB96O33T5itgWUNJPH8IzFuk",
+            authDomain: "smart-duka-1931e.firebaseapp.com",
+            projectId: "smart-duka-1931e",
+            storageBucket: "smart-duka-1931e.firebasestorage.app",
+            messagingSenderId: "768053863535",
+            appId: "1:768053863535:web:6fb7d999e9adf71ba4d99a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const mauzoCol = collection(db, "mauzo");
+
+        // LOGIN SYSTEM
+        window.checkLogin = function() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             if ((user === 'admin' && pass === 'duka2026') || (user === 'muuzaji' && pass === '1234')) {
+                localStorage.setItem('role', user);
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
-                document.getElementById('userBadge').innerText = "Logged in as: " + user;
-                onyeshaMauzo();
+                document.getElementById('userBadge').innerText = "Mtumiaji: " + user;
+                if(user === 'admin') document.getElementById('futaZoteBtn').style.display = 'block';
+                anzishaLiveUpdates();
             } else {
-                document.getElementById('errorMsg').innerText = "Jaribu tena!";
+                document.getElementById('errorMsg').innerText = "Username au Password si sahihi!";
             }
-        }
+        };
 
-        function ongezaMauzo() {
-            if (!sessionActive) return alert("Fungua biashara kwanza!");
+        // ADD SALE TO FIREBASE
+        window.ongezaMauzo = async function() {
             const bidhaa = document.getElementById('bidhaa').value;
             const bei = document.getElementById('bei').value;
             const idadi = document.getElementById('idadi').value;
 
             if (bidhaa && bei && idadi) {
-                const mpya = {
-                    id: Date.now(),
-                    bidhaa,
-                    bei: parseInt(bei),
-                    idadi: parseInt(idadi),
-                    jumla: parseInt(bei) * parseInt(idadi),
-                    muda: new Date().toLocaleString('sw-TZ')
-                };
-                mauzo.push(mpya);
-                hifadhiNaOnyesha();
-                document.getElementById('bidhaa').value = '';
-                document.getElementById('bei').value = '';
-                document.getElementById('idadi').value = '1';
+                try {
+                    await addDoc(mauzoCol, {
+                        bidhaa,
+                        bei: parseInt(bei),
+                        idadi: parseInt(idadi),
+                        jumla: parseInt(bei) * parseInt(idadi),
+                        muda: new Date().toLocaleString('sw-TZ'),
+                        timestamp: Date.now()
+                    });
+                    document.getElementById('bidhaa').value = '';
+                    document.getElementById('bei').value = '';
+                    document.getElementById('idadi').value = '1';
+                } catch (e) { alert("Hitilafu imetokea!"); }
             }
-        }
+        };
 
-        function hifadhiNaOnyesha() {
-            localStorage.setItem('mauzo', JSON.stringify(mauzo));
-            onyeshaMauzo();
-        }
+        // LIVE UPDATES FROM FIREBASE
+        function anzishaLiveUpdates() {
+            const q = query(mauzoCol, orderBy("timestamp", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const orodha = document.getElementById('orodhaMauzo');
+                const totalSpan = document.getElementById('leoTotal');
+                let html = '';
+                let total = 0;
 
-        function onyeshaMauzo() {
-            const orodha = document.getElementById('orodhaMauzo');
-            const totalSpan = document.getElementById('leoTotal');
-            const tareheSpan = document.getElementById('tareheLeo');
-            tareheSpan.innerText = new Date().toLocaleDateString('sw-TZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
-            orodha.innerHTML = '';
-            let total = 0;
-
-            mauzo.forEach((m) => {
-                total += m.jumla;
-                orodha.innerHTML += `
-                    <div class="item-row">
-                        <span><strong>${m.bidhaa}</strong> (x${m.idadi})</span>
-                        <span>${m.jumla.toLocaleString()}</span>
-                        <small style="color:gray">${m.muda.split(',')[1]}</small>
-                    </div>
-                `;
+                snapshot.forEach((doc) => {
+                    const m = doc.data();
+                    total += m.jumla;
+                    html += `
+                        <div class="item-row">
+                            <span><strong>${m.bidhaa}</strong> (x${m.idadi})</span>
+                            <span>${m.jumla.toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+                orodha.innerHTML = html || 'Hakuna mauzo bado.';
+                totalSpan.innerText = total.toLocaleString();
             });
-            totalSpan.innerText = total.toLocaleString();
         }
 
-        function fungaBiashara() {
-            if(confirm("Je, unafunga biashara kwa leo? Hii itatuma ripoti kwa Admin.")) {
-                sessionActive = false;
-                document.getElementById('haliBiashara').innerText = "BIASHARA IMEFUNGWA";
-                document.getElementById('sehemuYaKuuza').style.opacity = "0.5";
-                document.getElementById('btnFunga').style.display = "none";
-                alert("Biashara imefungwa. Pakua ripoti sasa.");
-            }
-        }
-
-        function pakuaRipoti() {
+        // DOWNLOAD REPORT
+        window.pakuaRipoti = async function() {
+            const querySnapshot = await getDocs(mauzoCol);
             let csv = "Muda,Bidhaa,Idadi,Bei,Jumla\n";
-            mauzo.forEach(m => {
+            querySnapshot.forEach((doc) => {
+                const m = doc.data();
                 csv += `${m.muda},${m.bidhaa},${m.idadi},${m.bei},${m.jumla}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.setAttribute('href', url);
-            a.setAttribute('download', `Ripoti_SmartDuka_${new Date().toLocaleDateString()}.csv`);
+            a.setAttribute('download', `Ripoti_Duka_Live.csv`);
             a.click();
-        }
+        };
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
-        }
+        // ADMIN ONLY: DELETE ALL
+        window.futaMauzoYote = async function() {
+            if(confirm("Je, unataka kufuta rekodi zote za mauzo kwenye database?")) {
+                const querySnapshot = await getDocs(mauzoCol);
+                querySnapshot.forEach(async (doc) => {
+                    await deleteDoc(doc.ref);
+                });
+            }
+        };
+
+        document.getElementById('tareheLeo').innerText = new Date().toLocaleDateString('sw-TZ', { weekday: 'long', day: 'numeric', month: 'long' });
     </script>
 </body>
 </html>
