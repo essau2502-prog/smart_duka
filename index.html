@@ -9,11 +9,12 @@
         #loginPage { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
         .main-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 8px; margin: 10px; text-align: center; }
+        .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 8px; margin: 10px; text-align: center; transition: 0.3s; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; width: 100%; padding: 15px; margin-top: 10px; }
         .btn-uza { background: #27ae60; color: white; }
         .btn-funga { background: #e67e22; color: white; }
+        .btn-fungua { background: #2c3e50; color: white; display: none; }
         .btn-download { background: #3498db; color: white; }
         .item-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         .badge { font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 10px; }
@@ -35,14 +36,19 @@
             <div id="userBadge" class="badge"></div>
         </div>
 
-        <div class="total-box">
-            <div id="statusBiashara">Biashara Iko Wazi</div>
+        <div id="statusBox" class="total-box">
+            <div id="statusText" style="font-weight: bold;">Biashara Iko Wazi</div>
             <div style="font-size: 2.2rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
             <small id="tareheLeo"></small>
         </div>
 
+        <div class="main-card" id="cardFungua" style="display: none; text-align: center;">
+            <p>Biashara imefungwa kwa sasa.</p>
+            <button onclick="funguaBiashara()" class="btn-fungua" id="btnFungua" style="display: block;">FUNGUA BIASHARA YA LEO</button>
+        </div>
+
         <div id="sectionMauzo" class="main-card">
-            <h3>Sajili Mauzo Magu</h3>
+            <h3>Sajili Mauzo</h3>
             <input type="text" id="bidhaa" placeholder="Jina la bidhaa">
             <input type="number" id="bei" placeholder="Bei ya kitu kimoja">
             <input type="number" id="idadi" placeholder="Idadi" value="1">
@@ -52,7 +58,7 @@
         <div class="main-card">
             <h3>Orodha ya Mauzo ya Leo</h3>
             <div id="orodhaMauzo">Inapakia...</div>
-            <button id="btnFunga" onclick="fungaBiashara()" class="btn-funga">FUNGA BIASHARA & SAVE RIPOTI</button>
+            <button id="btnFunga" onclick="fungaBiashara()" class="btn-funga">FUNGA BIASHARA (Z-REPORT)</button>
             <button onclick="pakuaRipoti()" class="btn-download">PAKUA RIPOTI (CSV)</button>
         </div>
     </div>
@@ -73,9 +79,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const mauzoCol = collection(db, "mauzo");
+        let tareheLeoString = new Date().toLocaleDateString('en-GB');
 
-        let tareheLeoString = new Date().toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
-
+        // Login Function
         window.checkLogin = function() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
@@ -85,10 +91,11 @@
                 document.getElementById('userBadge').innerText = "Mtumiaji: " + user;
                 anzishaLiveUpdates();
             } else {
-                document.getElementById('errorMsg').innerText = "Jaribu tena!";
+                document.getElementById('errorMsg').innerText = "Username au Password si sahihi!";
             }
         };
 
+        // Ongeza Mauzo
         window.ongezaMauzo = async function() {
             const bidhaa = document.getElementById('bidhaa').value;
             const bei = document.getElementById('bei').value;
@@ -110,39 +117,45 @@
             }
         };
 
+        // Live Updates
         function anzishaLiveUpdates() {
-            // Inasoma mauzo ya leo tu
             const q = query(mauzoCol, where("tarehe", "==", tareheLeoString), orderBy("timestamp", "desc"));
-            
             onSnapshot(q, (snapshot) => {
                 const orodha = document.getElementById('orodhaMauzo');
                 const totalSpan = document.getElementById('leoTotal');
                 let html = '';
                 let total = 0;
-
                 snapshot.forEach((doc) => {
                     const m = doc.data();
                     total += m.jumla;
-                    html += `<div class="item-row">
-                        <span><strong>${m.bidhaa}</strong> (x${m.idadi})</span>
-                        <span>${m.jumla.toLocaleString()}</span>
-                    </div>`;
+                    html += `<div class="item-row"><span><strong>${m.bidhaa}</strong> (x${m.idadi})</span><span>${m.jumla.toLocaleString()}</span></div>`;
                 });
                 orodha.innerHTML = html || 'Hakuna mauzo bado.';
                 totalSpan.innerText = total.toLocaleString();
             });
         }
 
+        // Funga Biashara
         window.fungaBiashara = function() {
-            if(confirm("Je, unataka kufunga biashara kwa leo?")) {
-                document.getElementById('statusBiashara').innerText = "BIASHARA IMEFUNGWA 🛑";
-                document.getElementById('statusBiashara').parentElement.style.background = "#e74c3c";
+            if(confirm("Je, unafunga biashara kwa leo?")) {
+                document.getElementById('statusText').innerText = "BIASHARA IMEFUNGWA 🛑";
+                document.getElementById('statusBox').style.background = "#e74c3c";
                 document.getElementById('sectionMauzo').style.display = "none";
                 document.getElementById('btnFunga').style.display = "none";
-                alert("Ripoti ya leo imehifadhiwa!");
+                document.getElementById('cardFungua').style.display = "block";
             }
         };
 
+        // Fungua Biashara
+        window.funguaBiashara = function() {
+            document.getElementById('statusText').innerText = "Biashara Iko Wazi";
+            document.getElementById('statusBox').style.background = "#27ae60";
+            document.getElementById('sectionMauzo').style.display = "block";
+            document.getElementById('btnFunga').style.display = "block";
+            document.getElementById('cardFungua').style.display = "none";
+        };
+
+        // Pakua Ripoti
         window.pakuaRipoti = async function() {
             const q = query(mauzoCol, where("tarehe", "==", tareheLeoString));
             const querySnapshot = await getDocs(q);
