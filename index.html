@@ -3,44 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Duka Live - Pro</title>
+    <title>Smart Duka Pro - Business</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; }
-        #loginPage { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
         .main-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 8px; margin: 10px; text-align: center; transition: 0.3s; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; width: 100%; padding: 12px; margin-top: 5px; }
-        .btn-uza { background: #27ae60; color: white; width: 100%; }
-        .btn-funga { background: #e67e22; color: white; width: 100%; }
-        .btn-fungua { background: #2c3e50; color: white; width: 100%; }
-        .btn-deni { background: #8e44ad; color: white; width: 100%; }
-        .btn-futa { background: #ff4d4d; color: white; padding: 5px 8px; font-size: 0.7rem; width: auto; }
+        .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 8px; margin: 10px; text-align: center; }
+        input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; padding: 12px; margin-top: 5px; width: 100%; }
+        .btn-primary { background: #2c3e50; color: white; }
+        .btn-uza { background: #27ae60; color: white; }
+        .btn-deni { background: #8e44ad; color: white; }
+        .btn-futa { background: #ff4d4d; color: white; width: auto; padding: 5px; font-size: 0.7rem; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .badge { font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 10px; }
-        .tab-btn { padding: 10px; width: 48%; background: #bdc3c7; color: black; }
+        .tab-btn { padding: 10px; width: 48%; background: #bdc3c7; border-radius: 5px; }
         .active-tab { background: #2c3e50; color: white; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="loginPage">
-        <h2>SMART DUKA LIVE 🏪</h2>
-        <input type="text" id="username" style="width: 80%;" placeholder="Jina la mtumiaji">
-        <input type="password" id="password" style="width: 80%;" placeholder="Neno la siri">
-        <button onclick="checkLogin()" style="width: 85%; background: #2c3e50; color: white;">INGIA</button>
-        <p id="errorMsg" style="color: red;"></p>
+    <div id="authPage" class="auth-page">
+        <h2 id="authTitle">SMART DUKA PRO 🏪</h2>
+        <div id="loginForm">
+            <input type="text" id="loginDukaID" placeholder="ID ya Duka (Mfano: duka123)">
+            <input type="password" id="loginPass" placeholder="Neno la Siri la Admin">
+            <button onclick="handleLogin()" class="btn-primary">INGIA KWENYE DUKA</button>
+            <p onclick="toggleAuth()" style="color: blue; cursor: pointer;">Hujasajili duka? Sajili hapa</p>
+        </div>
+        <div id="registerForm" class="hidden">
+            <input type="text" id="regDukaName" placeholder="Jina la Duka (Mfano: Mangi Store)">
+            <input type="text" id="regDukaID" placeholder="ID ya Duka (Yenye herufi na namba tu)">
+            <input type="password" id="regPass" placeholder="Tengeneza Neno la Siri">
+            <button onclick="handleRegister()" class="btn-primary" style="background: #27ae60;">SAJILI DUKA SASA</button>
+            <p onclick="toggleAuth()" style="color: blue; cursor: pointer;">Tayari una duka? Ingia hapa</p>
+        </div>
+        <p id="authError" style="color: red;"></p>
     </div>
 
-    <div id="mainApp" style="display: none;">
+    <div id="mainApp" class="hidden">
         <div class="header">
-            <h2 id="dukaName">SMART DUKA 🏪</h2>
-            <div id="userBadge" class="badge"></div>
+            <h2 id="displayDukaName">DUKA LAKO</h2>
+            <small id="displayDukaID"></small>
         </div>
 
         <div id="statusBox" class="total-box">
-            <div id="statusText" style="font-weight: bold;">Inapakia...</div>
+            <div id="statusText">Biashara Inapakia...</div>
             <div style="font-size: 2.2rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
             <small id="tareheLeo"></small>
         </div>
@@ -51,43 +60,39 @@
         </div>
 
         <div id="tabMauzo">
-            <div class="main-card" id="cardFungua" style="display: none; text-align: center;">
-                <p>Biashara imefungwa kwa sasa.</p>
-                <button onclick="badiliHaliDuka('Wazi')" class="btn-fungua">FUNGUA BIASHARA YA LEO</button>
+            <div class="main-card" id="cardFungua" style="display:none; text-align:center;">
+                <button onclick="setHaliDuka('Wazi')" class="btn-primary">FUNGUA BIASHARA LEO</button>
             </div>
-
-            <div id="sectionMauzoInput" class="main-card" style="display: none;">
+            <div id="sectionMauzoInput" class="main-card hidden">
                 <h3>Sajili Mauzo</h3>
-                <input type="text" id="bidhaa" placeholder="Jina la bidhaa">
-                <input type="number" id="bei" placeholder="Bei ya kitu kimoja">
+                <input type="text" id="bidhaa" placeholder="Bidhaa">
+                <input type="number" id="bei" placeholder="Bei">
                 <input type="number" id="idadi" placeholder="Idadi" value="1">
                 <button onclick="ongezaMauzo()" class="btn-uza">UZA SASA</button>
             </div>
-
             <div class="main-card">
-                <h3>Orodha ya Mauzo ya Leo</h3>
-                <div id="orodhaMauzo">Inapakia mauzo...</div>
-                <button id="btnFungaDuka" onclick="badiliHaliDuka('Imefungwa')" class="btn-funga" style="display:none; margin-top:20px;">FUNGA BIASHARA (Z-REPORT)</button>
+                <h3>Mauzo ya Leo</h3>
+                <div id="orodhaMauzo">Hakuna mauzo.</div>
+                <button id="btnFungaDuka" onclick="setHaliDuka('Imefungwa')" class="hidden" style="background: #e67e22; color: white; margin-top: 15px;">FUNGA BIASHARA (Z-REPORT)</button>
             </div>
         </div>
 
-        <div id="tabMadeni" style="display: none;">
+        <div id="tabMadeni" class="hidden">
             <div class="main-card">
                 <h3>Daftari la Madeni</h3>
-                <input type="text" id="mdeni_jina" placeholder="Jina la aliyekopa">
-                <input type="number" id="mdeni_kiasi" placeholder="Kiasi anachodaiwa">
+                <input type="text" id="mdeni_jina" placeholder="Jina la Mteja">
+                <input type="number" id="mdeni_kiasi" placeholder="Kiasi">
                 <button onclick="sajiliDeni()" class="btn-deni">HIFADHI DENI</button>
             </div>
-            <div class="main-card">
-                <h3>Madeni Yanayodaiwa</h3>
-                <div id="orodhaMadeni">Inapakia madeni...</div>
-            </div>
+            <div class="main-card" id="orodhaMadeni">Inapakia...</div>
         </div>
+        
+        <button onclick="location.reload()" style="background: #ccc; margin-top: 20px;">LOGOUT</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, deleteDoc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDXG65JsQ2pB96O33T5itgWUNJPH8IzFuk",
@@ -100,135 +105,121 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        let currentUser = "";
-        let dukaID = "duka_kuu_001"; // Hii baadaye itakuwa dynamic kwa kila mteja
-        let tareheLeoString = new Date().toLocaleDateString('en-GB');
+        let currentDuka = null;
+        let tareheLeo = new Date().toLocaleDateString('en-GB');
 
-        // Tab Switching
-        window.switchTab = function(tab) {
-            if(tab === 'mauzo') {
-                document.getElementById('tabMauzo').style.display = 'block';
-                document.getElementById('tabMadeni').style.display = 'none';
-                document.getElementById('tabMauzoBtn').classList.add('active-tab');
-                document.getElementById('tabMadeniBtn').classList.remove('active-tab');
-            } else {
-                document.getElementById('tabMauzo').style.display = 'none';
-                document.getElementById('tabMadeni').style.display = 'block';
-                document.getElementById('tabMauzoBtn').classList.remove('active-tab');
-                document.getElementById('tabMadeniBtn').classList.add('active-tab');
+        // Toggle Login/Register
+        window.toggleAuth = function() {
+            document.getElementById('loginForm').classList.toggle('hidden');
+            document.getElementById('registerForm').classList.toggle('hidden');
+            document.getElementById('authTitle').innerText = document.getElementById('registerForm').classList.contains('hidden') ? "SMART DUKA PRO 🏪" : "SAJILI DUKA JIPYA 🆕";
+        };
+
+        // Handle Registration
+        window.handleRegister = async function() {
+            const name = document.getElementById('regDukaName').value;
+            const id = document.getElementById('regDukaID').value.toLowerCase().trim();
+            const pass = document.getElementById('regPass').value;
+
+            if(name && id && pass) {
+                const docRef = doc(db, "maduka", id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    alert("ID ya Duka tayari inatumiwa! Tumia nyingine.");
+                } else {
+                    await setDoc(docRef, { name, pass, createdAt: new Date() });
+                    alert("Duka limesajiliwa! Sasa ingia.");
+                    toggleAuth();
+                }
             }
         };
 
-        // Login Logic
-        window.checkLogin = function() {
-            const user = document.getElementById('username').value.toLowerCase();
-            const pass = document.getElementById('password').value;
-            
-            if ((user === 'admin' && pass === 'duka2026') || (user === 'muuzaji' && pass === '1234')) {
-                currentUser = user;
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                document.getElementById('userBadge').innerText = "Mtumiaji: " + user.toUpperCase();
-                anzishaMfumo();
+        // Handle Login
+        window.handleLogin = async function() {
+            const id = document.getElementById('loginDukaID').value.toLowerCase().trim();
+            const pass = document.getElementById('loginPass').value;
+            const docSnap = await getDoc(doc(db, "maduka", id));
+
+            if (docSnap.exists() && docSnap.data().pass === pass) {
+                currentDuka = { id, ...docSnap.data() };
+                document.getElementById('authPage').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('displayDukaName').innerText = currentDuka.name;
+                document.getElementById('displayDukaID').innerText = "ID: " + currentDuka.id;
+                anzishaDukaLogic();
             } else {
-                document.getElementById('errorMsg').innerText = "Username au Password si sahihi!";
+                document.getElementById('authError').innerText = "ID au Neno la Siri limekosewa!";
             }
         };
 
-        async function anzishaMfumo() {
-            // 1. Hali ya Duka
-            onSnapshot(doc(db, "mipangilio", dukaID + "_" + tareheLeoString.replace(/\//g, '-')), (docSnap) => {
-                const hali = docSnap.exists() ? docSnap.data().hali : 'Imefungwa';
-                setUIHali(hali);
+        function anzishaDukaLogic() {
+            // Hali ya Duka
+            onSnapshot(doc(db, "mipangilio", currentDuka.id + "_" + tareheLeo.replace(/\//g, '-')), (snap) => {
+                const hali = snap.exists() ? snap.data().hali : 'Imefungwa';
+                document.getElementById('statusText').innerText = "BIASHARA " + hali.toUpperCase();
+                document.getElementById('statusBox').style.background = hali === 'Wazi' ? "#27ae60" : "#e74c3c";
+                document.getElementById('sectionMauzoInput').classList.toggle('hidden', hali === 'Imefungwa');
+                document.getElementById('cardFungua').style.display = hali === 'Imefungwa' ? 'block' : 'none';
+                document.getElementById('btnFungaDuka').classList.toggle('hidden', hali === 'Imefungwa');
             });
 
-            // 2. Live Mauzo
-            const qMauzo = query(collection(db, "mauzo"), where("dukaID", "==", dukaID), where("tarehe", "==", tareheLeoString));
-            onSnapshot(qMauzo, (snapshot) => {
-                let html = ''; let total = 0;
-                snapshot.forEach((doc) => {
-                    const m = doc.data();
-                    total += m.jumla;
-                    html += `<div class="item-row">
-                        <span><strong>${m.bidhaa}</strong> (x${m.idadi})<br><small>${m.muda}</small></span>
-                        <span style="text-align:right;">${m.jumla.toLocaleString()}<br>
-                        ${currentUser === 'admin' ? `<button class="btn-futa" onclick="futaKitu('mauzo','${doc.id}')">Futa</button>` : ''}</span>
-                    </div>`;
+            // Mauzo Updates
+            const qM = query(collection(db, "mauzo"), where("dukaID", "==", currentDuka.id), where("tarehe", "==", tareheLeo));
+            onSnapshot(qM, (snap) => {
+                let h = ''; let total = 0;
+                snap.forEach(d => {
+                    const m = d.data(); total += m.jumla;
+                    h += `<div class="item-row"><span>${m.bidhaa} (x${m.idadi})</span><span>${m.jumla.toLocaleString()} <button class="btn-futa" onclick="futa('mauzo','${d.id}')">X</button></span></div>`;
                 });
-                document.getElementById('orodhaMauzo').innerHTML = html || 'Hakuna mauzo.';
+                document.getElementById('orodhaMauzo').innerHTML = h || 'Hakuna mauzo.';
                 document.getElementById('leoTotal').innerText = total.toLocaleString();
             });
 
-            // 3. Live Madeni
-            const qMadeni = query(collection(db, "madeni"), where("dukaID", "==", dukaID));
-            onSnapshot(qMadeni, (snapshot) => {
-                let html = '';
-                snapshot.forEach((doc) => {
-                    const d = doc.data();
-                    const imelipwa = d.hali === 'imelipwa';
-                    html += `<div class="item-row" style="${imelipwa ? 'opacity:0.5' : ''}">
-                        <span><strong style="${imelipwa ? 'text-decoration:line-through' : ''}">${d.jina}</strong><br><small>Tsh ${d.kiasi.toLocaleString()}</small></span>
-                        <span>
-                            ${!imelipwa ? `<button onclick="lipaDeni('${doc.id}')" style="background:green; color:white; padding:5px;">✓</button>` : '✅'}
-                            ${currentUser === 'admin' ? `<button class="btn-futa" onclick="futaKitu('madeni','${doc.id}')">X</button>` : ''}
-                        </span>
-                    </div>`;
+            // Madeni Updates
+            onSnapshot(query(collection(db, "madeni"), where("dukaID", "==", currentDuka.id)), (snap) => {
+                let h = '';
+                snap.forEach(d => {
+                    const m = d.data();
+                    h += `<div class="item-row" style="${m.hali==='lipa'?'opacity:0.5':''}"><span>${m.jina}<br><small>Tsh ${m.kiasi}</small></span>
+                    <span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')" style="background:green;color:white;">✓</button>`:'✅'} <button class="btn-futa" onclick="futa('madeni','${d.id}')">X</button></span></div>`;
                 });
-                document.getElementById('orodhaMadeni').innerHTML = html || 'Safi! Hakuna madeni.';
+                document.getElementById('orodhaMadeni').innerHTML = h || 'Hakuna madeni.';
             });
         }
 
-        function setUIHali(hali) {
-            const wazi = hali === 'Wazi';
-            document.getElementById('statusText').innerText = wazi ? "BIASHARA IKO WAZI" : "BIASHARA IMEFUNGWA";
-            document.getElementById('statusBox').style.background = wazi ? "#27ae60" : "#e74c3c";
-            document.getElementById('sectionMauzoInput').style.display = wazi ? "block" : "none";
-            document.getElementById('cardFungua').style.display = wazi ? "none" : "block";
-            document.getElementById('btnFungaDuka').style.display = wazi ? "block" : "none";
-        }
-
-        window.badiliHaliDuka = async function(mpya) {
-            await setDoc(doc(db, "mipangilio", dukaID + "_" + tareheLeoString.replace(/\//g, '-')), {
-                hali: mpya, dukaID: dukaID, mtumiaji: currentUser
-            });
+        window.setHaliDuka = async (hali) => {
+            await setDoc(doc(db, "mipangilio", currentDuka.id + "_" + tareheLeo.replace(/\//g, '-')), { hali });
         };
 
-        window.ongezaMauzo = async function() {
+        window.ongezaMauzo = async () => {
             const b = document.getElementById('bidhaa').value;
             const p = document.getElementById('bei').value;
             const i = document.getElementById('idadi').value;
-            if(b && p && i) {
-                await addDoc(collection(db, "mauzo"), {
-                    bidhaa: b, bei: parseInt(p), idadi: parseInt(i), jumla: p*i,
-                    muda: new Date().toLocaleTimeString('sw-TZ'), tarehe: tareheLeoString,
-                    dukaID: dukaID, muuzaji: currentUser, timestamp: Date.now()
-                });
-                document.getElementById('bidhaa').value = ''; document.getElementById('bei').value = '';
+            if(b && p) {
+                await addDoc(collection(db, "mauzo"), { bidhaa:b, bei:Number(p), idadi:Number(i), jumla:p*i, dukaID:currentDuka.id, tarehe:tareheLeo });
+                document.getElementById('bidhaa').value=''; document.getElementById('bei').value='';
             }
         };
 
-        window.sajiliDeni = async function() {
+        window.sajiliDeni = async () => {
             const j = document.getElementById('mdeni_jina').value;
             const k = document.getElementById('mdeni_kiasi').value;
             if(j && k) {
-                await addDoc(collection(db, "madeni"), {
-                    jina: j, kiasi: parseInt(k), hali: "haijalipwa", dukaID: dukaID, tarehe: tareheLeoString
-                });
-                document.getElementById('mdeni_jina').value = ''; document.getElementById('mdeni_kiasi').value = '';
+                await addDoc(collection(db, "madeni"), { jina:j, kiasi:Number(k), hali:'deni', dukaID:currentDuka.id });
+                document.getElementById('mdeni_jina').value=''; document.getElementById('mdeni_kiasi').value='';
             }
         };
 
-        window.lipaDeni = async function(id) {
-            await updateDoc(doc(db, "madeni", id), { hali: "imelipwa" });
+        window.lipa = async (id) => { await updateDoc(doc(db, "madeni", id), { hali: 'lipa' }); };
+        window.futa = async (col, id) => { if(confirm("Futa?")) await deleteDoc(doc(db, col, id)); };
+        window.switchTab = (t) => {
+            document.getElementById('tabMauzo').classList.toggle('hidden', t!=='mauzo');
+            document.getElementById('tabMadeni').classList.toggle('hidden', t!=='madeni');
+            document.getElementById('tabMauzoBtn').classList.toggle('active-tab', t==='mauzo');
+            document.getElementById('tabMadeniBtn').classList.toggle('active-tab', t==='madeni');
         };
 
-        window.futaKitu = async function(col, id) {
-            if(confirm("Je, una uhakika wa kufuta?")) {
-                await deleteDoc(doc(db, col, id));
-            }
-        };
-
-        document.getElementById('tareheLeo').innerText = new Date().toLocaleDateString('sw-TZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        document.getElementById('tareheLeo').innerText = new Date().toLocaleDateString('sw-TZ', { weekday:'long', day:'numeric', month:'long' });
     </script>
 </body>
 </html>
