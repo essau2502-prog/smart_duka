@@ -11,13 +11,12 @@
         .main-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 8px; margin: 10px; text-align: center; transition: 0.3s; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; width: 100%; padding: 15px; margin-top: 10px; }
-        .btn-uza { background: #27ae60; color: white; }
-        .btn-funga { background: #e67e22; color: white; }
-        /* Imeondolewa display:none hapa ili iweze kudhibitiwa na JS */
-        .btn-fungua { background: #2c3e50; color: white; } 
-        .btn-download { background: #3498db; color: white; }
-        .item-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; width: 100%; padding: 12px; margin-top: 5px; }
+        .btn-uza { background: #27ae60; color: white; width: 100%; }
+        .btn-funga { background: #e67e22; color: white; width: 100%; }
+        .btn-fungua { background: #2c3e50; color: white; width: 100%; }
+        .btn-futa { background: #ff4d4d; color: white; padding: 5px 10px; font-size: 0.7rem; border-radius: 3px; width: auto; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
         .badge { font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 10px; }
     </style>
 </head>
@@ -33,22 +32,22 @@
 
     <div id="mainApp" style="display: none;">
         <div class="header">
-            <h2>SMART DUKA 🏪</h2>
+            <h2 id="dukaName">SMART DUKA 🏪</h2>
             <div id="userBadge" class="badge"></div>
         </div>
 
         <div id="statusBox" class="total-box">
-            <div id="statusText" style="font-weight: bold;">Biashara Iko Wazi</div>
+            <div id="statusText" style="font-weight: bold;">Inapakia hali ya duka...</div>
             <div style="font-size: 2.2rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
             <small id="tareheLeo"></small>
         </div>
 
         <div class="main-card" id="cardFungua" style="display: none; text-align: center;">
             <p>Biashara imefungwa kwa sasa.</p>
-            <button onclick="funguaBiashara()" class="btn-fungua">FUNGUA BIASHARA YA LEO</button>
+            <button onclick="badiliHaliDuka('Wazi')" class="btn-fungua">FUNGUA BIASHARA YA LEO</button>
         </div>
 
-        <div id="sectionMauzo" class="main-card">
+        <div id="sectionMauzo" class="main-card" style="display: none;">
             <h3>Sajili Mauzo</h3>
             <input type="text" id="bidhaa" placeholder="Jina la bidhaa">
             <input type="number" id="bei" placeholder="Bei ya kitu kimoja">
@@ -57,16 +56,17 @@
         </div>
 
         <div class="main-card">
-            <h3>Orodha ya Mauzo ya Leo</h3>
-            <div id="orodhaMauzo">Inapakia...</div>
-            <button id="btnFunga" onclick="fungaBiashara()" class="btn-funga">FUNGA BIASHARA (Z-REPORT)</button>
-            <button onclick="pakuaRipoti()" class="btn-download">PAKUA RIPOTI (CSV)</button>
+            <h3>Mauzo ya Leo</h3>
+            <div id="orodhaMauzo">Inapakia mauzo...</div>
+            <div id="adminControls" style="margin-top: 20px;">
+                <button id="btnFunga" onclick="badiliHaliDuka('Imefungwa')" class="btn-funga" style="display:none;">FUNGA BIASHARA (Z-REPORT)</button>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDXG65JsQ2pB96O33T5itgWUNJPH8IzFuk",
@@ -79,54 +79,80 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const mauzoCol = collection(db, "mauzo");
+        let currentUser = "";
         let tareheLeoString = new Date().toLocaleDateString('en-GB');
 
-        // Kazi ya ku-update muonekano kulingana na hali ya duka
-        function refreshUI(hali) {
-            if (hali === "closed") {
-                document.getElementById('statusText').innerText = "BIASHARA IMEFUNGWA 🛑";
-                document.getElementById('statusBox').style.background = "#e74c3c";
-                document.getElementById('sectionMauzo').style.display = "none";
-                document.getElementById('btnFunga').style.display = "none";
-                document.getElementById('cardFungua').style.display = "block";
-            } else {
-                document.getElementById('statusText').innerText = "Biashara Iko Wazi";
-                document.getElementById('statusBox').style.background = "#27ae60";
-                document.getElementById('sectionMauzo').style.display = "block";
-                document.getElementById('btnFunga').style.display = "block";
-                document.getElementById('cardFungua').style.display = "none";
-            }
-        }
-
+        // Login
         window.checkLogin = function() {
-            const user = document.getElementById('username').value;
+            const user = document.getElementById('username').value.toLowerCase();
             const pass = document.getElementById('password').value;
+            
             if ((user === 'admin' && pass === 'duka2026') || (user === 'muuzaji' && pass === '1234')) {
+                currentUser = user;
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
-                document.getElementById('userBadge').innerText = "Mtumiaji: " + user;
-                
-                // Angalia kama duka lilikuwa limefungwa
-                const haliYakalini = localStorage.getItem('dukaStatus');
-                refreshUI(haliYakalini);
-                
-                anzishaLiveUpdates();
+                document.getElementById('userBadge').innerText = "Mtumiaji: " + user.toUpperCase();
+                anzishaMfumo();
             } else {
                 document.getElementById('errorMsg').innerText = "Username au Password si sahihi!";
             }
         };
 
-        window.fungaBiashara = function() {
-            if(confirm("Je, unafunga biashara kwa leo?")) {
-                localStorage.setItem('dukaStatus', 'closed');
-                refreshUI('closed');
-            }
-        };
+        // Anzisha Mfumo
+        async function anzishaMfumo() {
+            // Fuatilia Hali ya Duka (Wazi/Imefungwa)
+            onSnapshot(doc(db, "mipangilio", tareheLeoString.replace(/\//g, '-')), (docSnap) => {
+                if (docSnap.exists()) {
+                    setUI(docSnap.data().hali);
+                } else {
+                    setUI('Imefungwa');
+                }
+            });
 
-        window.funguaBiashara = function() {
-            localStorage.setItem('dukaStatus', 'open');
-            refreshUI('open');
+            // Fuatilia Mauzo
+            const q = query(collection(db, "mauzo"), where("tarehe", "==", tareheLeoString));
+            onSnapshot(q, (snapshot) => {
+                const orodha = document.getElementById('orodhaMauzo');
+                const totalSpan = document.getElementById('leoTotal');
+                let html = '';
+                let total = 0;
+                
+                snapshot.forEach((doc) => {
+                    const m = doc.data();
+                    const id = doc.id;
+                    total += m.jumla;
+                    html += `
+                        <div class="item-row">
+                            <div>
+                                <strong>${m.bidhaa}</strong> (x${m.idadi})<br>
+                                <small>${m.muda}</small>
+                            </div>
+                            <div style="text-align:right;">
+                                <strong>${m.jumla.toLocaleString()}</strong><br>
+                                ${currentUser === 'admin' ? `<button class="btn-futa" onclick="futaMauzo('${id}')">Futa</button>` : ''}
+                            </div>
+                        </div>`;
+                });
+                orodha.innerHTML = html || 'Hakuna mauzo bado.';
+                totalSpan.innerText = total.toLocaleString();
+            });
+        }
+
+        function setUI(hali) {
+            const isWazi = hali === 'Wazi';
+            document.getElementById('statusText').innerText = isWazi ? "BIASHARA IKO WAZI" : "BIASHARA IMEFUNGWA";
+            document.getElementById('statusBox').style.background = isWazi ? "#27ae60" : "#e74c3c";
+            document.getElementById('sectionMauzo').style.display = isWazi ? "block" : "none";
+            document.getElementById('cardFungua').style.display = isWazi ? "none" : "block";
+            document.getElementById('btnFunga').style.display = isWazi ? "block" : "none";
+        }
+
+        window.badiliHaliDuka = async function(mpya) {
+            await setDoc(doc(db, "mipangilio", tareheLeoString.replace(/\//g, '-')), {
+                hali: mpya,
+                muda: new Date().toLocaleTimeString('sw-TZ'),
+                mtumiaji: currentUser
+            });
         };
 
         window.ongezaMauzo = async function() {
@@ -135,56 +161,26 @@
             const idadi = document.getElementById('idadi').value;
 
             if (bidhaa && bei && idadi) {
-                try {
-                    await addDoc(mauzoCol, {
-                        bidhaa,
-                        bei: parseInt(bei),
-                        idadi: parseInt(idadi),
-                        jumla: parseInt(bei) * parseInt(idadi),
-                        muda: new Date().toLocaleTimeString('sw-TZ'),
-                        tarehe: tareheLeoString,
-                        timestamp: Date.now()
-                    });
-                    document.getElementById('bidhaa').value = '';
-                    document.getElementById('bei').value = '';
-                    document.getElementById('idadi').value = '1';
-                } catch (e) {
-                    alert("Error adding document: " + e);
-                }
+                await addDoc(collection(db, "mauzo"), {
+                    bidhaa,
+                    bei: parseInt(bei),
+                    idadi: parseInt(idadi),
+                    jumla: parseInt(bei) * parseInt(idadi),
+                    muda: new Date().toLocaleTimeString('sw-TZ'),
+                    tarehe: tareheLeoString,
+                    muuzaji: currentUser,
+                    timestamp: Date.now()
+                });
+                document.getElementById('bidhaa').value = '';
+                document.getElementById('bei').value = '';
+                document.getElementById('idadi').value = '1';
             }
         };
 
-        function anzishaLiveUpdates() {
-            const q = query(mauzoCol, where("tarehe", "==", tareheLeoString), orderBy("timestamp", "desc"));
-            onSnapshot(q, (snapshot) => {
-                const orodha = document.getElementById('orodhaMauzo');
-                const totalSpan = document.getElementById('leoTotal');
-                let html = '';
-                let total = 0;
-                snapshot.forEach((doc) => {
-                    const m = doc.data();
-                    total += m.jumla;
-                    html += `<div class="item-row"><span><strong>${m.bidhaa}</strong> (x${m.idadi})</span><span>${m.jumla.toLocaleString()}</span></div>`;
-                });
-                orodha.innerHTML = html || 'Hakuna mauzo bado.';
-                totalSpan.innerText = total.toLocaleString();
-            });
-        }
-
-        window.pakuaRipoti = async function() {
-            const q = query(mauzoCol, where("tarehe", "==", tareheLeoString));
-            const querySnapshot = await getDocs(q);
-            let csv = "Muda,Bidhaa,Idadi,Bei,Jumla\n";
-            querySnapshot.forEach((doc) => {
-                const m = doc.data();
-                csv += `${m.muda},${m.bidhaa},${m.idadi},${m.bei},${m.jumla}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', `Ripoti_${tareheLeoString.replace(/\//g,'-')}.csv`);
-            a.click();
+        window.futaMauzo = async function(id) {
+            if (confirm("Futa mauzo haya?")) {
+                await deleteDoc(doc(db, "mauzo", id));
+            }
         };
 
         document.getElementById('tareheLeo').innerText = new Date().toLocaleDateString('sw-TZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
