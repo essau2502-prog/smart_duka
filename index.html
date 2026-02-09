@@ -1,133 +1,149 @@
 <!DOCTYPE html>
 <html lang="sw">
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART DUKA | USIMAMIZI</title>
+    <title>Smart Duka</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+        
+        /* MUONEKANO WA LOGIN */
+        #loginPage {
+            padding: 20px; text-align: center; background: white; 
+            position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .login-input { width: 80%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        .btn-login { background: #2c3e50; color: white; border: none; padding: 15px 30px; border-radius: 5px; width: 85%; font-weight: bold; }
+
+        /* MUONEKANO WA DUKA */
         .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
-        .main-card { background: white; margin: 15px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .main-card { background: white; margin: 15px; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 10px; margin: 15px; text-align: center; }
         .total-amount { font-size: 2rem; font-weight: bold; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn-uza { background: #27ae60; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn-uza { background: #27ae60; color: white; border: none; padding: 15px; width: 100%; border-radius: 5px; font-size: 1.1rem; cursor: pointer; }
         .item-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+        .btn-futa { color: #e74c3c; cursor: pointer; font-weight: bold; border: none; background: none; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h2>SMART DUKA 🏪</h2>
-    <small>Mhasibu wako wa Mkononi</small>
-</div>
-
-<div class="main-card">
-    <div class="total-box">
-        <div>MAUZO YA LEO (Tsh)</div>
-        <div class="total-amount" id="grandTotal">0</div>
+    <div id="loginPage">
+        <h2>SMART DUKA 🏪</h2>
+        <p>Tafadhali ingia kutumia akaunti yako</p>
+        <input type="text" id="username" class="login-input" placeholder="Jina la mtumiaji (admin/muuzaji)">
+        <input type="password" id="password" class="login-input" placeholder="Neno la siri">
+        <button onclick="checkLogin()" class="btn-login">INGIA</button>
+        <p id="errorMsg" style="color: red; margin-top: 10px;"></p>
     </div>
 
-    <h3>Sajili Mauzo</h3>
-    <input type="text" id="itemName" placeholder="Jina la Bidhaa">
-    <input type="number" id="itemPrice" placeholder="Bei ya Moja">
-    <input type="number" id="itemQty" placeholder="Idadi">
-    <button class="btn-uza" onclick="kamilishaMauzo()">REKODI MAUZO</button>
-</div>
+    <div id="mainApp" style="display: none;">
+        <div class="header">
+            <h2>SMART DUKA 🏪</h2>
+            <small>Mhasibu wako wa Mkononi</small>
+        </div>
 
-<div class="main-card">
-    <h3>Orodha ya Mauzo</h3>
-    <div id="saleList"></div>
-    <button onclick="pakuaRipoti()" style="background:#3498db; color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">PAKUA RIPOTI YA LEO (TXT)</button> 
-    <button onclick="futaKilaKitu()" style="background:none; border:none; color:red; cursor:pointer; margin-top:15px; width:100%;">Futa Mauzo Yote</button>
-</div>
+        <div class="total-box">
+            <div>Jumla ya Mauzo ya Leo</div>
+            <div class="total-amount">Tsh <span id="leoTotal">0</span></div>
+        </div>
 
-<script>
-    // Hii sehemu inachukua data zilizohifadhiwa awali
-    let mauzoYaLeo = JSON.parse(localStorage.getItem('smart_duka_data')) || [];
+        <div class="main-card">
+            <h3>Andika Mauzo</h3>
+            <input type="text" id="bidhaa" placeholder="Jina la bidhaa">
+            <input type="number" id="bei" placeholder="Bei (Tsh)">
+            <button onclick="ongezaMauzo()" class="btn-uza">Sajili Mauzo</button>
+        </div>
 
-    function kamilishaMauzo() {
-        const jina = document.getElementById('itemName').value;
-        const bei = document.getElementById('itemPrice').value;
-        const idadi = document.getElementById('itemQty').value;
+        <div class="main-card">
+            <h3>Mauzo ya Leo</h3>
+            <div id="orodhaMauzo">
+                </div>
+            <button onclick="futaKilaKitu()" style="margin-top: 20px; color: gray; background: none; border: none; font-size: 0.8rem;">Safisha Orodha</button>
+        </div>
+    </div>
 
-        if (jina && bei && idadi) {
-            const mpya = {
-                jina: jina,
-                jumla: parseInt(bei) * parseInt(idadi)
-            };
+    <script>
+        // LOGIC YA LOGIN
+        function checkLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const error = document.getElementById('errorMsg');
 
-            mauzoYaLeo.push(mpya);
-            hifadhiNaOnyesha();
-            
-            // Kusafisha fomu
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemPrice').value = '';
-            document.getElementById('itemQty').value = '';
-        } else {
-            alert("Jaza nafasi zote!");
+            if (user === 'admin' && pass === 'duka2026') {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+            } else if (user === 'muuzaji' && pass === '1234') {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+            } else {
+                error.innerText = "Jina au password si sahihi!";
+            }
         }
-    }
 
-    function hifadhiNaOnyesha() {
-        // Hifadhi kwenye memory ya browser (LocalStorage)
-        localStorage.setItem('smart_duka_data', JSON.stringify(mauzoYaLeo));
-        
-        let html = '';
-        let jumlaKuu = 0;
+        // LOGIC YA MAUZO
+        let mauzo = JSON.parse(localStorage.getItem('mauzo')) || [];
 
-        mauzoYaLeo.forEach((m, index) => {
-            jumlaKuu += m.jumla;
-            html += `<div class="item-row"><span>${m.jina}</span> <span>${m.jumla.toLocaleString()}</span></div>`;
-        });
+        function ongezaMauzo() {
+            const bidhaa = document.getElementById('bidhaa').value;
+            const bei = document.getElementById('bei').value;
 
-        document.getElementById('saleList').innerHTML = html;
-        document.getElementById('grandTotal').innerText = jumlaKuu.toLocaleString();
-    }
+            if (bidhaa && bei) {
+                const mpya = { id: Date.now(), bidhaa, bei: parseInt(bei) };
+                mauzo.push(mpya);
+                hifadhiNaOnyesha();
+                document.getElementById('bidhaa').value = '';
+                document.getElementById('bei').value = '';
+            }
+        }
 
-    function futaKilaKitu() {
-        if(confirm("Je, unafuta mauzo yote?")) {
-            mauzoYaLeo = [];
+        function hifadhiNaOnyesha() {
+            localStorage.setItem('mauzo', JSON.stringify(mauzo));
+            onyeshaMauzo();
+        }
+
+        function onyeshaMauzo() {
+            const orodha = document.getElementById('orodhaMauzo');
+            const totalSpan = document.getElementById('leoTotal');
+            orodha.innerHTML = '';
+            let total = 0;
+
+            mauzo.forEach((m) => {
+                total += m.bei;
+                orodha.innerHTML += `
+                    <div class="item-row">
+                        <span>${m.bidhaa}</span>
+                        <span>${m.bei.toLocaleString()}</span>
+                        <button class="btn-futa" onclick="futaMoja(${m.id})">X</button>
+                    </div>
+                `;
+            });
+            totalSpan.innerText = total.toLocaleString();
+        }
+
+        function futaMoja(id) {
+            mauzo = mauzo.filter(m => m.id !== id);
             hifadhiNaOnyesha();
         }
-    }
 
-    function pakuaRipoti() {
-    if (mauzoYaLeo.length === 0) {
-        alert("Hakuna mauzo ya leo!");
-        return;
-    }
+        function futaKilaKitu() {
+            if(confirm("Je, unataka kufuta mauzo yote ya leo?")) {
+                mauzo = [];
+                hifadhiNaOnyesha();
+            }
+        }
 
-    let ripoti = "--- RIPOTI YA MAUZO SMART DUKA ---\n";
-    let jumla = 0;
-    
-    mauzoYaLeo.forEach(m => {
-        ripoti += `Bidhaa: ${m.jina} | Jumla: ${m.jumla.toLocaleString()} Tsh\n`;
-        jumla += m.jumla;
-    });
+        // Fungua mauzo yaliyopo pindi app ikifunguka
+        onyeshaMauzo();
 
-    ripoti += "---------------------------\n";
-    ripoti += `JUMLA KUU: ${jumla.toLocaleString()} Tsh\n`;
-    ripoti += "Asante kwa kutumia Smart Duka!";
-
-    const blob = new Blob([ripoti], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `Ripoti_Mauzo_${new Date().toLocaleDateString()}.txt`;
-    a.click();
-}
-
-    // Onyesha data mara tu app inapofunguka
-    hifadhiNaOnyesha();
-</script>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('sw.js');
-    });
-  }
-</script>
+        // Sajili Service Worker kwa ajili ya Offline
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
 </body>
 </html>
