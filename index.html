@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART DUKA | USIMAMIZI</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+        .main-card { background: white; margin: 15px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .total-amount { font-size: 2rem; font-weight: bold; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-uza { background: #27ae60; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .item-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>SMART DUKA 🏪</h2>
+    <small>Mhasibu wako wa Mkononi</small>
+</div>
+
+<div class="main-card">
+    <div class="total-box">
+        <div>MAUZO YA LEO (Tsh)</div>
+        <div class="total-amount" id="grandTotal">0</div>
+    </div>
+
+    <h3>Sajili Mauzo</h3>
+    <input type="text" id="itemName" placeholder="Jina la Bidhaa">
+    <input type="number" id="itemPrice" placeholder="Bei ya Moja">
+    <input type="number" id="itemQty" placeholder="Idadi">
+    <button class="btn-uza" onclick="kamilishaMauzo()">REKODI MAUZO</button>
+</div>
+
+<div class="main-card">
+    <h3>Orodha ya Mauzo</h3>
+    <div id="saleList"></div>
+    <button onclick="pakuaRipoti()" style="background:#3498db; color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">PAKUA RIPOTI YA LEO (TXT)</button> 
+    <button onclick="futaKilaKitu()" style="background:none; border:none; color:red; cursor:pointer; margin-top:15px; width:100%;">Futa Mauzo Yote</button>
+</div>
+
+<script>
+    // Hii sehemu inachukua data zilizohifadhiwa awali
+    let mauzoYaLeo = JSON.parse(localStorage.getItem('smart_duka_data')) || [];
+
+    function kamilishaMauzo() {
+        const jina = document.getElementById('itemName').value;
+        const bei = document.getElementById('itemPrice').value;
+        const idadi = document.getElementById('itemQty').value;
+
+        if (jina && bei && idadi) {
+            const mpya = {
+                jina: jina,
+                jumla: parseInt(bei) * parseInt(idadi)
+            };
+
+            mauzoYaLeo.push(mpya);
+            hifadhiNaOnyesha();
+            
+            // Kusafisha fomu
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemPrice').value = '';
+            document.getElementById('itemQty').value = '';
+        } else {
+            alert("Jaza nafasi zote!");
+        }
+    }
+
+    function hifadhiNaOnyesha() {
+        // Hifadhi kwenye memory ya browser (LocalStorage)
+        localStorage.setItem('smart_duka_data', JSON.stringify(mauzoYaLeo));
+        
+        let html = '';
+        let jumlaKuu = 0;
+
+        mauzoYaLeo.forEach((m, index) => {
+            jumlaKuu += m.jumla;
+            html += `<div class="item-row"><span>${m.jina}</span> <span>${m.jumla.toLocaleString()}</span></div>`;
+        });
+
+        document.getElementById('saleList').innerHTML = html;
+        document.getElementById('grandTotal').innerText = jumlaKuu.toLocaleString();
+    }
+
+    function futaKilaKitu() {
+        if(confirm("Je, unafuta mauzo yote?")) {
+            mauzoYaLeo = [];
+            hifadhiNaOnyesha();
+        }
+    }
+
+    function pakuaRipoti() {
+    if (mauzoYaLeo.length === 0) {
+        alert("Hakuna mauzo ya leo!");
+        return;
+    }
+
+    let ripoti = "--- RIPOTI YA MAUZO SMART DUKA ---\n";
+    let jumla = 0;
+    
+    mauzoYaLeo.forEach(m => {
+        ripoti += `Bidhaa: ${m.jina} | Jumla: ${m.jumla.toLocaleString()} Tsh\n`;
+        jumla += m.jumla;
+    });
+
+    ripoti += "---------------------------\n";
+    ripoti += `JUMLA KUU: ${jumla.toLocaleString()} Tsh\n`;
+    ripoti += "Asante kwa kutumia Smart Duka!";
+
+    const blob = new Blob([ripoti], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Ripoti_Mauzo_${new Date().toLocaleDateString()}.txt`;
+    a.click();
+}
+
+    // Onyesha data mara tu app inapofunguka
+    hifadhiNaOnyesha();
+</script>
+
+</body>
+</html>

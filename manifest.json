@@ -1,0 +1,15 @@
+{
+  "short_name": "SmartDuka",
+  "name": "Smart Duka Mhasibu",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#2c3e50",
+  "theme_color": "#27ae60",
+  "display": "standalone"
+}
