@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Duka Pro - Business Edition</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; }
         .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -27,31 +30,28 @@
 <body>
 
     <div id="authPage" class="auth-page">
-        <h2 id="authTitle">SMART DUKA PRO 🏪</h2>
+        <h2>SMART DUKA PRO 🏪</h2>
         <div id="loginForm">
             <input type="text" id="loginDukaID" placeholder="ID ya Duka">
-            <input type="text" id="loginUser" placeholder="Jina la Mtumiaji (admin/muuzaji)">
+            <input type="text" id="loginUser" placeholder="Jina (admin/muuzaji)">
             <input type="password" id="loginPass" placeholder="Neno la Siri">
             <button onclick="handleLogin()" class="btn-primary">INGIA KAZINI</button>
-            <p onclick="toggleAuth()" style="color: #3498db; cursor: pointer; margin-top: 15px;">Sajili Duka Jipya Hapa</p>
+            <p onclick="toggleAuth()" style="color: #3498db; cursor: pointer; margin-top: 15px;">Sajili Duka Jipya</p>
         </div>
         <div id="registerForm" class="hidden">
             <input type="text" id="regDukaName" placeholder="Jina la Duka">
-            <input type="text" id="regDukaID" placeholder="Tengeneza ID ya Duka (Unique)">
-            <input type="password" id="regPass" placeholder="Neno la Siri la Admin">
+            <input type="text" id="regDukaID" placeholder="Tengeneza ID ya Duka">
+            <input type="password" id="regPass" placeholder="Siri ya Admin">
             <button onclick="handleRegister()" class="btn-primary" style="background: #27ae60;">KAMILISHA USAJILI</button>
-            <p onclick="toggleAuth()" style="color: #3498db; cursor: pointer; margin-top: 15px;">Tayari una duka? Ingia</p>
+            <p onclick="toggleAuth()" style="color: #3498db; cursor: pointer; margin-top: 15px;">Rudi kwenye Login</p>
         </div>
-        <p id="authError" style="color: red; padding: 10px;"></p>
+        <p id="authError" style="color: red;"></p>
     </div>
 
     <div id="mainApp" class="hidden">
         <div class="header">
             <h2 id="displayDukaName">DUKA LAKO</h2>
-            <div style="display: flex; justify-content: center; gap: 10px;">
-                <span id="displayUser" class="badge"></span>
-                <span id="displayDukaID" style="font-size: 0.7rem; opacity: 0.8;"></span>
-            </div>
+            <span id="displayUser" class="badge"></span>
         </div>
 
         <div id="statusBox" class="total-box">
@@ -63,30 +63,29 @@
         <div class="tab-bar">
             <button id="tabMauzoBtn" class="tab-btn active-tab" onclick="switchTab('mauzo')">Mauzo</button>
             <button id="tabMadeniBtn" class="tab-btn" onclick="switchTab('madeni')">Madeni</button>
-            <button id="tabStaffBtn" class="tab-btn hidden" onclick="switchTab('staff')">Wafanyakazi 👥</button>
+            <button id="tabStaffBtn" class="tab-btn hidden" onclick="switchTab('staff')">Wafanyakazi</button>
         </div>
 
         <div id="tabMauzo">
-            <div class="main-card" id="cardFungua" style="display:none; text-align:center;">
+            <div id="cardFungua" style="display:none; text-align:center;" class="main-card">
                 <button onclick="setHaliDuka('Wazi')" class="btn-primary">FUNGUA BIASHARA LEO</button>
             </div>
             <div id="sectionMauzoInput" class="main-card hidden">
-                <input type="text" id="bidhaa" placeholder="Jina la Bidhaa">
+                <input type="text" id="bidhaa" placeholder="Bidhaa">
                 <input type="number" id="bei" placeholder="Bei">
                 <input type="number" id="idadi" placeholder="Idadi" value="1">
                 <button onclick="ongezaMauzo()" class="btn-uza">UZA SASA</button>
             </div>
             <div class="main-card">
                 <h3>Orodha ya Leo</h3>
-                <div id="orodhaMauzo">Hakuna mauzo.</div>
+                <div id="orodhaMauzo"></div>
                 <button id="btnFungaDuka" onclick="setHaliDuka('Imefungwa')" class="hidden" style="background: #e67e22; color: white; margin-top: 15px;">FUNGA BIASHARA</button>
             </div>
         </div>
 
         <div id="tabMadeni" class="hidden">
             <div class="main-card">
-                <h3>Sajili Deni Jipya</h3>
-                <input type="text" id="mdeni_jina" placeholder="Mteja aliyekopa">
+                <input type="text" id="mdeni_jina" placeholder="Mteja">
                 <input type="number" id="mdeni_kiasi" placeholder="Kiasi">
                 <button onclick="sajiliDeni()" class="btn-deni">HIFADHI DENI</button>
             </div>
@@ -95,20 +94,14 @@
 
         <div id="tabStaff" class="hidden">
             <div class="main-card">
-                <h3>Sajili Muuzaji (Staff)</h3>
                 <input type="text" id="staffUser" placeholder="Jina la Muuzaji">
-                <input type="password" id="staffPass" placeholder="Password ya Muuzaji">
-                <button onclick="sajiliStaff()" style="background:#34495e; color:white;">ONGEZA MFANYAKAZI</button>
+                <input type="password" id="staffPass" placeholder="Password">
+                <button onclick="sajiliStaff()" class="btn-primary">ONGEZA MUUZAJI</button>
             </div>
-            <div class="main-card">
-                <h3>Orodha ya Wafanyakazi</h3>
-                <div id="orodhaStaff"></div>
-            </div>
+            <div class="main-card" id="orodhaStaff"></div>
         </div>
         
-        <div style="text-align: center; margin-top: 20px;">
-            <button onclick="location.reload()" style="width: auto; background: none; color: gray;">Log Out</button>
-        </div>
+        <button onclick="location.reload()" style="background: none; color: gray; margin-top: 20px;">Log Out</button>
     </div>
 
     <script type="module">
@@ -131,61 +124,47 @@
         let isAdmin = false;
         let tareheLeo = new Date().toLocaleDateString('en-GB');
 
+        // KODI YA DOWNLOAD (PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').catch(err => console.log(err));
+            });
+        }
+
         window.toggleAuth = () => {
             document.getElementById('loginForm').classList.toggle('hidden');
             document.getElementById('registerForm').classList.toggle('hidden');
         };
 
-        // SAJILI DUKA (Master Switch imewekwa hapa)
         window.handleRegister = async () => {
             const name = document.getElementById('regDukaName').value;
             const id = document.getElementById('regDukaID').value.toLowerCase().trim();
             const pass = document.getElementById('regPass').value;
             if(name && id && pass) {
-                const docRef = doc(db, "maduka", id);
-                const snap = await getDoc(docRef);
-                if(snap.exists()) { alert("ID hii tayari imechukuliwa!"); return; }
-                
-                await setDoc(docRef, { 
-                    name, 
-                    adminPass: pass, 
-                    status: 'active', // Swichi yako: 'active' au 'inactive'
-                    createdAt: new Date() 
-                });
-                alert("Duka limesajiliwa! Ingia kama admin.");
-                toggleAuth();
+                await setDoc(doc(db, "maduka", id), { name, adminPass: pass, status: 'active' });
+                alert("Duka limesajiliwa!"); toggleAuth();
             }
         };
 
-        // LOGIN (Inakagua kama duka limezimwa)
         window.handleLogin = async () => {
             const dukaID = document.getElementById('loginDukaID').value.toLowerCase().trim();
             const user = document.getElementById('loginUser').value.toLowerCase().trim();
             const pass = document.getElementById('loginPass').value;
+            const snap = await getDoc(doc(db, "maduka", dukaID));
 
-            const dukaSnap = await getDoc(doc(db, "maduka", dukaID));
-            if (!dukaSnap.exists()) { alert("Duka halipo!"); return; }
-
-            const dukaData = dukaSnap.data();
-            
-            // Kagua Status (Kama umemfungia mteja)
-            if (dukaData.status !== 'active') {
-                alert("Huduma imesitishwa. Wasiliana na mtoa huduma.");
-                return;
-            }
-
-            if (user === 'admin' && pass === dukaData.adminPass) {
-                isAdmin = true;
-                completeLogin(dukaID, dukaData.name, 'Admin');
-            } else {
-                const staffSnap = await getDoc(doc(db, "maduka", dukaID, "staff", user));
-                if (staffSnap.exists() && staffSnap.data().pass === pass) {
-                    isAdmin = false;
-                    completeLogin(dukaID, dukaData.name, user);
+            if (snap.exists() && snap.data().status === 'active') {
+                const data = snap.data();
+                if (user === 'admin' && pass === data.adminPass) {
+                    isAdmin = true;
+                    completeLogin(dukaID, data.name, 'Admin');
                 } else {
-                    alert("User/Password imekosewa!");
+                    const sSnap = await getDoc(doc(db, "maduka", dukaID, "staff", user));
+                    if (sSnap.exists() && sSnap.data().pass === pass) {
+                        isAdmin = false;
+                        completeLogin(dukaID, data.name, user);
+                    } else { alert("User/Pass imekosewa!"); }
                 }
-            }
+            } else { alert("Duka halipo au limefungwa!"); }
         };
 
         function completeLogin(id, name, user) {
@@ -193,14 +172,12 @@
             document.getElementById('authPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('displayDukaName').innerText = name;
-            document.getElementById('displayDukaID').innerText = "ID: " + id;
-            document.getElementById('displayUser').innerText = "User: " + user.toUpperCase();
+            document.getElementById('displayUser').innerText = user.toUpperCase();
             if(isAdmin) document.getElementById('tabStaffBtn').classList.remove('hidden');
             anzishaLogic();
         }
 
         function anzishaLogic() {
-            // Hali ya Duka (Open/Closed)
             onSnapshot(doc(db, "mipangilio", currentDukaID + "_" + tareheLeo.replace(/\//g, '-')), (snap) => {
                 const hali = snap.exists() ? snap.data().hali : 'Imefungwa';
                 document.getElementById('statusText').innerText = "BIASHARA " + hali.toUpperCase();
@@ -210,87 +187,62 @@
                 document.getElementById('btnFungaDuka').classList.toggle('hidden', hali === 'Imefungwa' || !isAdmin);
             });
 
-            // Live Mauzo
             onSnapshot(query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID), where("tarehe", "==", tareheLeo)), (snap) => {
                 let h = ''; let total = 0;
                 snap.forEach(d => {
                     const m = d.data(); total += m.jumla;
-                    h += `<div class="item-row"><span>${m.bidhaa} (x${m.idadi})<br><small>Saa: ${m.muda} | Muuzaji: ${m.muuzaji}</small></span>
-                    <span>${m.jumla.toLocaleString()} ${isAdmin ? `<button class="btn-futa" onclick="futa('mauzo','${d.id}')">X</button>` : ''}</span></div>`;
+                    h += `<div class="item-row"><span>${m.bidhaa} (x${m.idadi})</span><span>${m.jumla.toLocaleString()} ${isAdmin ? `<button class="btn-futa" onclick="futa('mauzo','${d.id}')">X</button>` : ''}</span></div>`;
                 });
-                document.getElementById('orodhaMauzo').innerHTML = h || 'Hakuna mauzo.';
+                document.getElementById('orodhaMauzo').innerHTML = h;
                 document.getElementById('leoTotal').innerText = total.toLocaleString();
             });
 
-            // Madeni
             onSnapshot(query(collection(db, "madeni"), where("dukaID", "==", currentDukaID)), (snap) => {
                 let h = '';
                 snap.forEach(d => {
                     const m = d.data();
-                    h += `<div class="item-row" style="${m.hali==='lipa'?'opacity:0.5':''}"><span>${m.jina}<br><small>Tsh ${m.kiasi}</small></span>
-                    <span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')" style="background:green;color:white;width:auto;padding:5px 10px;">✓</button>`:'✅'} ${isAdmin ? `<button class="btn-futa" onclick="futa('madeni','${d.id}')">X</button>` : ''}</span></div>`;
+                    h += `<div class="item-row"><span>${m.jina}<br><small>${m.kiasi}</small></span><span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')">✓</button>`:'✅'}</span></div>`;
                 });
-                document.getElementById('orodhaMadeni').innerHTML = h || 'Hakuna madeni.';
+                document.getElementById('orodhaMadeni').innerHTML = h;
             });
 
-            // Staff List (Admin tu)
             if(isAdmin) {
                 onSnapshot(collection(db, "maduka", currentDukaID, "staff"), (snap) => {
-                    let h = '';
-                    snap.forEach(d => {
-                        h += `<div class="item-row"><span>${d.id}</span> <button class="btn-futa" onclick="futaStaff('${d.id}')">Ondoa</button></div>`;
-                    });
+                    let h = ''; snap.forEach(d => { h += `<div class="item-row"><span>${d.id}</span><button onclick="futaStaff('${d.id}')">X</button></div>`; });
                     document.getElementById('orodhaStaff').innerHTML = h;
                 });
             }
         }
 
-        // ACTIONS
         window.setHaliDuka = async (hali) => { await setDoc(doc(db, "mipangilio", currentDukaID + "_" + tareheLeo.replace(/\//g, '-')), { hali }); };
-
         window.ongezaMauzo = async () => {
             const b = document.getElementById('bidhaa').value;
             const p = Number(document.getElementById('bei').value);
             const i = Number(document.getElementById('idadi').value);
             if(b && p) {
-                await addDoc(collection(db, "mauzo"), { bidhaa:b, bei:p, idadi:i, jumla:p*i, dukaID:currentDukaID, tarehe:tareheLeo, muda: new Date().toLocaleTimeString('sw-TZ'), muuzaji: currentUser });
+                await addDoc(collection(db, "mauzo"), { bidhaa:b, bei:p, idadi:i, jumla:p*i, dukaID:currentDukaID, tarehe:tareheLeo, muuzaji: currentUser });
                 document.getElementById('bidhaa').value=''; document.getElementById('bei').value='';
             }
         };
-
         window.sajiliDeni = async () => {
             const j = document.getElementById('mdeni_jina').value;
             const k = Number(document.getElementById('mdeni_kiasi').value);
-            if(j && k) {
-                await addDoc(collection(db, "madeni"), { jina:j, kiasi:k, hali:'deni', dukaID:currentDukaID });
-                document.getElementById('mdeni_jina').value=''; document.getElementById('mdeni_kiasi').value='';
-            }
+            if(j && k) await addDoc(collection(db, "madeni"), { jina:j, kiasi:k, hali:'deni', dukaID:currentDukaID });
         };
-
-        window.sajiliStaff = async () => {
-            const user = document.getElementById('staffUser').value.toLowerCase().trim();
-            const pass = document.getElementById('staffPass').value;
-            if(user && pass) {
-                await setDoc(doc(db, "maduka", currentDukaID, "staff", user), { pass });
-                alert("Muuzaji amesajiliwa!");
-                document.getElementById('staffUser').value = ''; document.getElementById('staffPass').value = '';
-            }
-        };
-
         window.lipa = async (id) => { await updateDoc(doc(db, "madeni", id), { hali: 'lipa' }); };
         window.futa = async (col, id) => { if(confirm("Futa?")) await deleteDoc(doc(db, col, id)); };
-        window.futaStaff = async (staffID) => { if(confirm("Ondoa mfanyakazi?")) await deleteDoc(doc(db, "maduka", currentDukaID, "staff", staffID)); };
-
+        window.sajiliStaff = async () => {
+            const u = document.getElementById('staffUser').value.toLowerCase().trim();
+            const p = document.getElementById('staffPass').value;
+            if(u && p) await setDoc(doc(db, "maduka", currentDukaID, "staff", u), { pass: p });
+        };
         window.switchTab = (t) => {
             ['mauzo','madeni','staff'].forEach(id => {
-                const el = document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1));
-                if(el) el.classList.toggle('hidden', t !== id);
-                const btn = document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1) + 'Btn');
-                if(btn) btn.classList.toggle('active-tab', t === id);
+                document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1)).classList.toggle('hidden', t !== id);
+                document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1) + 'Btn').classList.toggle('active-tab', t === id);
             });
         };
-
-        document.getElementById('tareheLeo').innerText = new Date().toLocaleDateString('sw-TZ', { weekday:'long', day:'numeric', month:'long' });
+        document.getElementById('tareheLeo').innerText = new Date().toLocaleDateString('sw-TZ', { day:'numeric', month:'long' });
     </script>
 </body>
 </html>
