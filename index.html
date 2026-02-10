@@ -38,7 +38,7 @@
         </div>
         <div id="registerForm" class="hidden">
             <input type="text" id="regDukaName" placeholder="Jina la Duka">
-            <input type="text" id="regDukaID" placeholder="ID ya Duka">
+            <input type="text" id="regDukaID" placeholder="Tengeneza ID ya Duka">
             <input type="password" id="regPass" placeholder="Siri ya Admin">
             <button onclick="handleRegister()" class="btn-primary" style="background: #27ae60;">SAJILI DUKA</button>
             <p onclick="toggleAuth()" style="color: #3498db; cursor: pointer; margin-top: 15px;">Rudi Login</p>
@@ -95,7 +95,7 @@
                 <input type="number" id="stkBeiB" placeholder="Bei ya Kununulia (Moja)">
                 <input type="number" id="stkBeiS" placeholder="Bei ya Kuuzia (Moja)">
                 <input type="number" id="stkIdadi" placeholder="Idadi/Stok">
-                <p style="font-size: 0.8rem; color: #666;">Picha ya Bidhaa/Risiti (M-Pesa):</p>
+                <p style="font-size: 0.8rem; color: #666;">Picha ya Bidhaa/Risiti:</p>
                 <input type="file" accept="image/*" capture="environment" onchange="previewImage(this)">
                 <img id="previewImg">
                 <button onclick="hifadhiMzigo()" class="btn-primary">HIFADHI MZIGO</button>
@@ -122,18 +122,23 @@
 
         <div id="tabMadeni" class="hidden">
             <div class="main-card">
-                <input type="text" id="mdeni_jina" placeholder="Mteja">
-                <input type="number" id="mdeni_kiasi" placeholder="Kiasi">
+                <h3>Sajili Deni</h3>
+                <input type="text" id="mdeni_jina" placeholder="Jina la Mteja">
+                <input type="number" id="mdeni_kiasi" placeholder="Kiasi cha Deni">
                 <button onclick="sajiliDeni()" style="background:#8e44ad; color:white;">HIFADHI DENI</button>
             </div>
-            <div id="orodhaMadeni" class="main-card"></div>
+            <div class="main-card">
+                <h3>Orodha ya Madeni</h3>
+                <div id="orodhaMadeni"></div>
+            </div>
         </div>
 
         <div id="tabStaff" class="hidden">
             <div class="main-card">
-                <input type="text" id="staffUser" placeholder="Jina">
-                <input type="password" id="staffPass" placeholder="Password">
-                <button onclick="sajiliStaff()" class="btn-primary">SAJILI</button>
+                <h3>Sajili Muuzaji</h3>
+                <input type="text" id="staffUser" placeholder="Jina la Muuzaji">
+                <input type="password" id="staffPass" placeholder="Password yake">
+                <button onclick="sajiliStaff()" class="btn-primary">ONGEZA STAFF</button>
             </div>
             <div id="orodhaStaff" class="main-card"></div>
         </div>
@@ -143,7 +148,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc, deleteDoc, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDXG65JsQ2pB96O33T5itgWUNJPH8IzFuk",
@@ -156,6 +161,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        enableIndexedDbPersistence(db).catch(() => {});
 
         let currentDukaID = null; let currentUser = null; let isAdmin = false;
         let leoDate = new Date().toLocaleDateString('en-GB');
@@ -179,18 +185,20 @@
             const dukaID = document.getElementById('loginDukaID').value.toLowerCase().trim();
             const user = document.getElementById('loginUser').value.toLowerCase().trim();
             const pass = document.getElementById('loginPass').value;
-            const snap = await getDoc(doc(db, "maduka", dukaID));
-            if (snap.exists() && snap.data().status === 'active') {
-                const data = snap.data();
-                if (user === 'admin' && pass === data.adminPass) {
-                    isAdmin = true; completeLogin(dukaID, data.name, 'Admin');
-                } else {
-                    const sSnap = await getDoc(doc(db, "maduka", dukaID, "staff", user));
-                    if (sSnap.exists() && sSnap.data().pass === pass) {
-                        isAdmin = false; completeLogin(dukaID, data.name, user);
-                    } else { alert("User/Pass imekosewa!"); }
-                }
-            } else { alert("Duka halipo au limefungwa!"); }
+            try {
+                const snap = await getDoc(doc(db, "maduka", dukaID));
+                if (snap.exists() && snap.data().status === 'active') {
+                    const data = snap.data();
+                    if (user === 'admin' && pass === data.adminPass) {
+                        isAdmin = true; completeLogin(dukaID, data.name, 'Admin');
+                    } else {
+                        const sSnap = await getDoc(doc(db, "maduka", dukaID, "staff", user));
+                        if (sSnap.exists() && sSnap.data().pass === pass) {
+                            isAdmin = false; completeLogin(dukaID, data.name, user);
+                        } else { alert("Neno la siri limekosewa!"); }
+                    }
+                } else { alert("Duka halipo!"); }
+            } catch(e) { alert("Tatizo la mtandao au Duka ID!"); }
         };
 
         function completeLogin(id, name, user) {
@@ -204,7 +212,7 @@
         }
 
         function anzishaLogic() {
-            // Hali ya Duka (Fungua/Funga)
+            // Fungua/Funga Watcher
             onSnapshot(doc(db, "mipangilio", currentDukaID + "_" + leoDate.replace(/\//g, '-')), (snap) => {
                 const hali = snap.exists() ? snap.data().hali : 'Imefungwa';
                 document.getElementById('statusText').innerText = "BIASHARA " + hali.toUpperCase();
@@ -239,20 +247,23 @@
                 document.getElementById('profitDisplay').innerText = `Faida ya Leo: Tsh ${profit.toLocaleString()}`;
             });
 
-            // Madeni
+            // Madeni Watcher (Fixed Undefined)
             onSnapshot(query(collection(db, "madeni"), where("dukaID", "==", currentDukaID)), (snap) => {
                 let h = ''; snap.forEach(d => {
                     const m = d.data();
-                    h += `<div class="item-row"><span>${m.jina}<br><small>${m.kiasi}</small></span><span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')">✓</button>`:'✅'}</span></div>`;
+                    h += `<div class="item-row"><span>${m.jina}<br><small>Kiasi: ${m.kiasi}</small></span><span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')">Lipa ✓</button>`:'✅ Imelipwa'}</span></div>`;
                 });
-                document.getElementById('orodhaMadeni').innerHTML = h;
+                document.getElementById('orodhaMadeni').innerHTML = h || 'Hakuna madeni.';
             });
+            
+            // Staff List
+            if(isAdmin) {
+                onSnapshot(collection(db, "maduka", currentDukaID, "staff"), (snap) => {
+                    let h = ''; snap.forEach(d => { h += `<div class="item-row"><span>${d.id.toUpperCase()}</span><button onclick="futaStaff('${d.id}')" style="background:red; color:white; width:auto; padding:2px 10px;">X</button></div>`; });
+                    document.getElementById('orodhaStaff').innerHTML = h;
+                });
+            }
         }
-
-        window.updatePreselPrice = () => {
-            const bId = document.getElementById('selBidhaa').value;
-            if(bId) document.getElementById('uzaBei').value = dukaStock[bId].beiS;
-        };
 
         window.setHaliDuka = async (hali) => { await setDoc(doc(db, "mipangilio", currentDukaID + "_" + leoDate.replace(/\//g, '-')), { hali }); };
 
@@ -261,10 +272,11 @@
             const bB = Number(document.getElementById('stkBeiB').value);
             const bS = Number(document.getElementById('stkBeiS').value);
             const idadi = Number(document.getElementById('stkIdadi').value);
-            if(bidhaa && bB) {
+            if(bidhaa && bB && bS) {
                 const id = bidhaa.toLowerCase().replace(/\s/g, '_');
                 await setDoc(doc(db, "maduka", currentDukaID, "stok", id), { bidhaa, beiB:bB, beiS:bS, idadi });
                 alert("Mzigo umesajiliwa!");
+                document.getElementById('stkBidhaa').value=''; document.getElementById('stkBeiB').value=''; document.getElementById('stkBeiS').value=''; document.getElementById('stkIdadi').value='';
             }
         };
 
@@ -280,8 +292,29 @@
                     dukaID: currentDukaID, tarehe: leoDate, muuzaji: currentUser 
                 });
                 await updateDoc(doc(db, "maduka", currentDukaID, "stok", bId), { idadi: item.idadi - qty });
+                document.getElementById('uzaIdadi').value = 1;
             }
         };
+
+        window.sajiliDeni = async () => {
+            const jina = document.getElementById('mdeni_jina').value.trim();
+            const kiasi = Number(document.getElementById('mdeni_kiasi').value);
+            if(jina && kiasi > 0) {
+                await addDoc(collection(db, "madeni"), { jina, kiasi, hali:'deni', dukaID: currentDukaID, tarehe: leoDate });
+                document.getElementById('mdeni_jina').value=''; document.getElementById('mdeni_kiasi').value='';
+                alert("Deni limehifadhiwa!");
+            } else { alert("Weka jina na kiasi!"); }
+        };
+
+        window.lipa = async (id) => { if(confirm("Lipa deni hili?")) await updateDoc(doc(db, "madeni", id), { hali: 'lipa' }); };
+        
+        window.sajiliStaff = async () => {
+            const u = document.getElementById('staffUser').value.toLowerCase().trim();
+            const p = document.getElementById('staffPass').value;
+            if(u && p) { await setDoc(doc(db, "maduka", currentDukaID, "staff", u), { pass: p }); alert("Staff ameongezwa!"); }
+        };
+        
+        window.futaStaff = async (id) => { if(confirm("Ondoa staff huyu?")) await deleteDoc(doc(db, "maduka", currentDukaID, "staff", id)); };
 
         window.pataRipotiYaMwezi = async () => {
             const mYear = document.getElementById('reportMonth').value;
@@ -293,7 +326,23 @@
                 const data = d.data(); const [dd, mm, yy] = data.tarehe.split('/');
                 if(mm === m && yy === y) { tS += data.jumla; tP += (data.profit || 0); }
             });
-            document.getElementById('monthSummary').innerHTML = `<div style="background:#2c3e50; color:white; padding:10px; border-radius:5px; margin-top:10px;">Mauzo: ${tS.toLocaleString()}<br>FAIDA: ${tP.toLocaleString()}</div>`;
+            document.getElementById('monthSummary').innerHTML = `<div style="background:#2c3e50; color:white; padding:10px; border-radius:5px; margin-top:10px;">Mauzo: Tsh ${tS.toLocaleString()}<br>FAIDA: Tsh ${tP.toLocaleString()}</div>`;
+        };
+
+        window.tafutaHistoria = async () => {
+            const p = document.getElementById('searchDate').value;
+            if(!p) return;
+            const [y, m, d] = p.split('-'); const f = `${d}/${m}/${y}`;
+            const q = query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID), where("tarehe", "==", f));
+            const snap = await getDocs(q);
+            let h = `<h4>Tarehe: ${f}</h4>`; let t = 0;
+            snap.forEach(doc => { const m = doc.data(); t += m.jumla; h += `<div class="item-row"><span>${m.bidhaa}</span><span>${m.jumla.toLocaleString()}</span></div>`; });
+            document.getElementById('historyResult').innerHTML = h + `<p><b>Jumla: Tsh ${t.toLocaleString()}</b></p>`;
+        };
+
+        window.updatePreselPrice = () => {
+            const bId = document.getElementById('selBidhaa').value;
+            if(bId) document.getElementById('uzaBei').value = dukaStock[bId].beiS;
         };
 
         window.switchTab = (t) => {
