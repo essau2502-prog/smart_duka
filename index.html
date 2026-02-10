@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Duka Pro v5.0</title>
+    <title>Smart Duka Pro - Final Edition</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <style>
@@ -23,7 +23,6 @@
         .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
         .badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
         .profit-tag { color: #27ae60; font-weight: bold; }
-        /* Support Styles */
         .support-box { background: #ecf0f1; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: center; }
         .whatsapp-btn { background: #25D366; color: white; padding: 10px; display: block; text-decoration: none; border-radius: 5px; margin-top: 10px; }
     </style>
@@ -59,7 +58,7 @@
 
         <div id="statusBox" class="total-box">
             <div id="statusText">Inapakia...</div>
-            <div style="font-size: 2rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
+            <div style="font-size: 1.8rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
             <div id="profitDisplay" style="font-size: 0.9rem; opacity: 0.9;">Faida ya Leo: Tsh 0</div>
             <small id="tareheDisplay"></small>
         </div>
@@ -86,29 +85,9 @@
             </div>
 
             <div class="main-card">
-                <h3>Orodha ya Leo</h3>
+                <h3>Mauzo ya Leo</h3>
                 <div id="orodhaMauzo"></div>
                 <button id="btnFungaDuka" onclick="setHaliDuka('Imefungwa')" class="hidden" style="background: #e67e22; color: white; margin-top: 15px;">FUNGA BIASHARA</button>
-            </div>
-        </div>
-
-        <div id="tabSupport" class="hidden">
-            <div class="main-card">
-                <h3>Huduma kwa Wateja 🎧</h3>
-                <p>Kama unahitaji msaada wa kiufundi au unataka kutoa maoni, wasiliana nasi:</p>
-                
-                <div class="support-box">
-                    <strong>WhatsApp Support</strong>
-                    <a href="https://wa.me/255758244950?text=Habari, nahitaji msaada kwenye Smart Duka Pro" target="_blank" class="whatsapp-btn">
-                        Chat nasi WhatsApp
-                    </a>
-                </div>
-
-                <div class="support-box">
-                    <strong>Tovuti Yetu</strong><br>
-                    <p>Tembelea tovuti yetu kwa maelezo zaidi:</p>
-                    <button onclick="window.open('https://essau2502-prog.github.io/essau-brand/', '_blank')" class="btn-primary">Fungua Website</button>
-                </div>
             </div>
         </div>
 
@@ -127,30 +106,53 @@
             </div>
         </div>
 
-        <div id="tabStaff" class="hidden">
+        <div id="tabHistory" class="hidden">
             <div class="main-card">
-                <input type="text" id="staffUser" placeholder="Jina la Muuzaji">
-                <input type="text" id="staffPass" placeholder="Password">
-                <button onclick="sajiliStaff()" class="btn-primary">ONGEZA STAFF</button>
+                <h3>Ripoti ya Mwezi 📅</h3>
+                <input type="month" id="reportMonth">
+                <button onclick="pataRipotiYaMwezi()" class="btn-primary">Tazama Faida ya Mwezi</button>
+                <div id="monthSummary"></div>
             </div>
-            <div class="main-card" id="orodhaStaff"></div>
+            
+            <div class="main-card">
+                <h3>Tafuta Siku Maalum 🔍</h3>
+                <input type="date" id="searchDate" onchange="tafutaHistoria()">
+                <div id="historyResult"></div>
+            </div>
         </div>
 
         <div id="tabMadeni" class="hidden">
             <div class="main-card">
-                <input type="text" id="mdeni_jina" placeholder="Jina">
+                <input type="text" id="mdeni_jina" placeholder="Jina la Mdeni">
                 <input type="number" id="mdeni_kiasi" placeholder="Kiasi">
                 <button onclick="sajiliDeni()" style="background:#8e44ad; color:white;">HIFADHI DENI</button>
             </div>
             <div class="main-card" id="orodhaMadeni"></div>
         </div>
 
-        <div id="tabHistory" class="hidden">
+        <div id="tabSupport" class="hidden">
             <div class="main-card">
-                <input type="month" id="reportMonth">
-                <button onclick="pataRipotiYaMwezi()" class="btn-primary">Ripoti ya Mwezi</button>
-                <div id="monthSummary"></div>
+                <h3>Huduma kwa Wateja 🎧</h3>
+                <p>Mawasiliano ya msaada au maoni:</p>
+                <div class="support-box">
+                    <strong>WhatsApp Support</strong>
+                    <a href="https://wa.me/255758244950?text=Msaada kwenye Smart Duka" target="_blank" class="whatsapp-btn">Chat nasi WhatsApp</a>
+                </div>
+                <div class="support-box">
+                    <strong>Tovuti</strong><br>
+                    <button onclick="window.open('https://essau2502-prog.github.io/essau-brand/', '_blank')" class="btn-primary" style="margin-top:10px;">Fungua Tovuti</button>
+                </div>
             </div>
+        </div>
+
+        <div id="tabStaff" class="hidden">
+            <div class="main-card">
+                <h3>Sajili Muuzaji</h3>
+                <input type="text" id="staffUser" placeholder="Jina">
+                <input type="text" id="staffPass" placeholder="Password">
+                <button onclick="sajiliStaff()" class="btn-primary">SAJILI MUUZAJI</button>
+            </div>
+            <div class="main-card" id="orodhaStaff"></div>
         </div>
 
         <button onclick="location.reload()" style="margin:20px auto; display:block; color:gray; background:none; border:1px solid #ccc; padding:5px 10px;">Log Out</button>
@@ -176,18 +178,16 @@
         let leoDate = new Date().toLocaleDateString('en-GB');
         let dukaStock = {};
 
-        window.toggleAuth = () => {
-            document.getElementById('loginForm').classList.toggle('hidden');
-            document.getElementById('registerForm').classList.toggle('hidden');
-        };
+        // AUTH
+        window.toggleAuth = () => { document.getElementById('loginForm').classList.toggle('hidden'); document.getElementById('registerForm').classList.toggle('hidden'); };
 
         window.handleRegister = async () => {
             const name = document.getElementById('regDukaName').value;
             const id = document.getElementById('regDukaID').value.toLowerCase().trim();
             const pass = document.getElementById('regPass').value;
             if(name && id && pass) {
-                await setDoc(doc(db, "maduka", id), { name, adminPass: pass, status: 'active' });
-                alert("Duka limesajiliwa!"); toggleAuth();
+                await setDoc(doc(db, "maduka", id), { name, adminPass: pass });
+                alert("Sajili imekamilika! Karibu."); toggleAuth();
             }
         };
 
@@ -232,16 +232,13 @@
             });
 
             onSnapshot(collection(db, "maduka", currentDukaID, "stok"), (snap) => {
-                let options = '<option value="">Chagua kutoka Stok...</option>';
-                let list = '';
+                let opts = '<option value="">Chagua kutoka Stok...</option>'; let list = '';
                 snap.forEach(d => {
                     const s = d.data(); dukaStock[d.id] = s;
-                    const fJumla = (s.beiS - s.beiB) * s.idadi;
-                    options += `<option value="${d.id}">${s.bidhaa} (${s.idadi})</option>`;
-                    list += `<div class="item-row"><span>${s.bidhaa}<br><small>Stok: ${s.idadi}</small></span><span class="profit-tag">Faida: ${fJumla.toLocaleString()}</span></div>`;
+                    opts += `<option value="${d.id}">${s.bidhaa} (${s.idadi})</option>`;
+                    list += `<div class="item-row"><span>${s.bidhaa}<br><small>Stok: ${s.idadi}</small></span><span class="profit-tag">Faida: ${((s.beiS-s.beiB)*s.idadi).toLocaleString()}</span></div>`;
                 });
-                document.getElementById('selBidhaa').innerHTML = options;
-                document.getElementById('orodhaStock').innerHTML = list;
+                document.getElementById('selBidhaa').innerHTML = opts; document.getElementById('orodhaStock').innerHTML = list;
             });
 
             onSnapshot(query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID), where("tarehe", "==", leoDate)), (snap) => {
@@ -258,29 +255,20 @@
             onSnapshot(query(collection(db, "madeni"), where("dukaID", "==", currentDukaID)), (snap) => {
                 let h = ''; snap.forEach(d => {
                     const m = d.data();
-                    h += `<div class="item-row"><span>${m.jina}<br><small>${m.kiasi}</small></span><span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')">Lipa ✓</button>`:'✅'}</span></div>`;
+                    h += `<div class="item-row"><span>${m.jina}<br><small>${m.kiasi}</small></span><span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')">Lipa</button>`:'✅'}</span></div>`;
                 });
                 document.getElementById('orodhaMadeni').innerHTML = h;
             });
 
             if(isAdmin) {
                 onSnapshot(collection(db, "maduka", currentDukaID, "staff"), (snap) => {
-                    let h = ''; snap.forEach(d => {
-                        h += `<div class="item-row"><span><b>${d.id.toUpperCase()}</b></span><button onclick="futaStaff('${d.id}')" style="background:red; color:white; width:auto; padding:5px 10px;">Futa</button></div>`;
-                    });
+                    let h = ''; snap.forEach(d => { h += `<div class="item-row"><span><b>${d.id.toUpperCase()}</b></span><button onclick="futaStaff('${d.id}')" style="background:red; color:white; width:auto; padding:5px 10px;">Futa</button></div>`; });
                     document.getElementById('orodhaStaff').innerHTML = h;
                 });
             }
         }
 
-        window.sajiliStaff = async () => {
-            const u = document.getElementById('staffUser').value.toLowerCase().trim();
-            const p = document.getElementById('staffPass').value;
-            if(u && p && isAdmin) { await setDoc(doc(db, "maduka", currentDukaID, "staff", u), { pass: p }); alert("Staff ameongezwa!"); }
-        };
-
-        window.futaStaff = async (id) => { if(confirm("Futa huyu?")) await deleteDoc(doc(db, "maduka", currentDukaID, "staff", id)); };
-
+        // ACTIONS
         window.ongezaMauzo = async () => {
             const bId = document.getElementById('selBidhaa').value;
             const bei = Number(document.getElementById('uzaBei').value);
@@ -308,17 +296,39 @@
             }
         };
 
-        window.sajiliDeni = async () => {
-            const j = document.getElementById('mdeni_jina').value;
-            const k = Number(document.getElementById('mdeni_kiasi').value);
-            if(j && k) {
-                await addDoc(collection(db, "madeni"), { jina:j, kiasi:k, hali:'deni', dukaID:currentDukaID, tarehe:leoDate });
-                document.getElementById('mdeni_jina').value=''; document.getElementById('mdeni_kiasi').value='';
-            }
+        window.tafutaHistoria = async () => {
+            const p = document.getElementById('searchDate').value; if(!p) return;
+            const [y, m, d] = p.split('-'); const tTafutiwa = `${d}/${m}/${y}`;
+            const q = query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID), where("tarehe", "==", tTafutiwa));
+            const snap = await getDocs(q);
+            let h = `<h4>Matokeo ya: ${tTafutiwa}</h4>`; let t = 0; let pft = 0;
+            if(snap.empty) { h += "<p>Hakuna mauzo.</p>"; }
+            else { snap.forEach(doc => { const m = doc.data(); t += m.jumla; pft += (m.profit || 0); h += `<div class="item-row"><span>${m.bidhaa} (x${m.idadi})</span><span>${m.jumla.toLocaleString()}</span></div>`; });
+                   h += `<div style="margin-top:10px; border-top:2px solid #2c3e50;">Total: ${t.toLocaleString()}<br><small style="color:green">Faida: ${pft.toLocaleString()}</small></div>`; }
+            document.getElementById('historyResult').innerHTML = h;
         };
 
-        window.lipa = async (id) => { if(confirm("Lipa deni hili?")) await updateDoc(doc(db, "madeni", id), { hali: 'lipa' }); };
+        window.pataRipotiYaMwezi = async () => {
+            const mYear = document.getElementById('reportMonth').value; if(!mYear) return;
+            const [y, m] = mYear.split('-');
+            const snap = await getDocs(query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID)));
+            let tS = 0; let tP = 0;
+            snap.forEach(d => { const data = d.data(); const [, mm, yy] = data.tarehe.split('/'); if(mm === m && yy === y) { tS += data.jumla; tP += (data.profit || 0); } });
+            document.getElementById('monthSummary').innerHTML = `<div style="background:#2c3e50; color:white; padding:10px; border-radius:5px; margin-top:10px;">Mauzo: ${tS.toLocaleString()}<br>Faida: ${tP.toLocaleString()}</div>`;
+        };
 
+        window.sajiliStaff = async () => {
+            const u = document.getElementById('staffUser').value.toLowerCase().trim();
+            const p = document.getElementById('staffPass').value;
+            if(u && p && isAdmin) { await setDoc(doc(db, "maduka", currentDukaID, "staff", u), { pass: p }); alert("Staff ameongezwa!"); }
+        };
+
+        window.futaStaff = async (id) => { if(confirm("Futa?")) await deleteDoc(doc(db, "maduka", currentDukaID, "staff", id)); };
+        window.sajiliDeni = async () => {
+            const j = document.getElementById('mdeni_jina').value; const k = Number(document.getElementById('mdeni_kiasi').value);
+            if(j && k) { await addDoc(collection(db, "madeni"), { jina:j, kiasi:k, hali:'deni', dukaID:currentDukaID, tarehe:leoDate }); }
+        };
+        window.lipa = async (id) => { await updateDoc(doc(db, "madeni", id), { hali: 'lipa' }); };
         window.switchTab = (t) => {
             ['mauzo','stock','history','madeni','support','staff'].forEach(id => {
                 const el = document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1));
@@ -327,12 +337,7 @@
                 if(btn) btn.classList.toggle('active-tab', t === id);
             });
         };
-
-        window.updatePreselPrice = () => {
-            const bId = document.getElementById('selBidhaa').value;
-            if(bId) document.getElementById('uzaBei').value = dukaStock[bId].beiS;
-        };
-
+        window.updatePreselPrice = () => { const bId = document.getElementById('selBidhaa').value; if(bId) document.getElementById('uzaBei').value = dukaStock[bId].beiS; };
         window.setHaliDuka = async (hali) => { await setDoc(doc(db, "mipangilio", currentDukaID + "_" + leoDate.replace(/\//g, '-')), { hali }); };
         document.getElementById('tareheDisplay').innerText = "Leo: " + leoDate;
     </script>
