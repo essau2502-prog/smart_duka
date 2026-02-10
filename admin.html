@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin - Smart Duka</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+        .card { background: #2c3e50; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .active { color: #2ecc71; font-weight: bold; }
+        .blocked { color: #e74c3c; font-weight: bold; }
+        button { padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-toggle { background: #f1c40f; color: black; }
+        .header { border-bottom: 2px solid #34495e; margin-bottom: 20px; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Super Admin Panel 🛠️</h1>
+        <p>Dhibiti Maduka na Malipo ya Wateja</p>
+    </div>
+
+    <div id="dukaList">Inapakia maduka...</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXG65JsQ2pB96O33T5itgWUNJPH8IzFuk",
+            authDomain: "smart-duka-1931e.firebaseapp.com",
+            projectId: "smart-duka-1931e",
+            storageBucket: "smart-duka-1931e.firebasestorage.app",
+            messagingSenderId: "768053863535",
+            appId: "1:768053863535:web:6fb7d999e9adf71ba4d99a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Pakia Maduka Yote
+        onSnapshot(collection(db, "maduka"), (snap) => {
+            let h = '';
+            snap.forEach(d => {
+                const data = d.data();
+                const statusClass = data.status === 'active' ? 'active' : 'blocked';
+                h += `
+                    <div class="card">
+                        <div>
+                            <strong>${data.name}</strong> (ID: ${d.id})<br>
+                            Status: <span class="${statusClass}">${data.status.toUpperCase()}</span>
+                        </div>
+                        <button class="btn-toggle" onclick="toggleStatus('${d.id}', '${data.status}')">
+                            ${data.status === 'active' ? 'Zima (Block)' : 'Washa (Activate)'}
+                        </button>
+                    </div>
+                `;
+            });
+            document.getElementById('dukaList').innerHTML = h || 'Hakuna duka lililosajiliwa.';
+        });
+
+        window.toggleStatus = async (id, currentStatus) => {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            if(confirm(`Badilisha duka ${id} kuwa ${newStatus}?`)) {
+                await updateDoc(doc(db, "maduka", id), { status: newStatus });
+            }
+        };
+    </script>
+</body>
+</html>
