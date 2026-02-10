@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Duka Pro - The Ultimate Boss</title>
+    <title>Smart Duka Pro - The Ultimate Boss v4.6</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <style>
@@ -23,6 +23,7 @@
         .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         #previewImg { width: 100%; max-height: 150px; object-fit: contain; margin-top: 10px; display: none; border-radius: 5px; }
         .badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        .profit-tag { color: #27ae60; font-weight: bold; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -101,7 +102,7 @@
                 <button onclick="hifadhiMzigo()" class="btn-primary">HIFADHI MZIGO</button>
             </div>
             <div class="main-card">
-                <h3>Mzigo Uliopo (Stok)</h3>
+                <h3>Mzigo Uliopo & Faida Inayotarajiwa</h3>
                 <div id="orodhaStock"></div>
             </div>
         </div>
@@ -198,7 +199,7 @@
                         } else { alert("Neno la siri limekosewa!"); }
                     }
                 } else { alert("Duka halipo!"); }
-            } catch(e) { alert("Tatizo la mtandao au Duka ID!"); }
+            } catch(e) { alert("Tatizo la mtandao!"); }
         };
 
         function completeLogin(id, name, user) {
@@ -212,7 +213,6 @@
         }
 
         function anzishaLogic() {
-            // Fungua/Funga Watcher
             onSnapshot(doc(db, "mipangilio", currentDukaID + "_" + leoDate.replace(/\//g, '-')), (snap) => {
                 const hali = snap.exists() ? snap.data().hali : 'Imefungwa';
                 document.getElementById('statusText').innerText = "BIASHARA " + hali.toUpperCase();
@@ -222,20 +222,23 @@
                 document.getElementById('btnFungaDuka').classList.toggle('hidden', hali === 'Imefungwa' || !isAdmin);
             });
 
-            // Stok Watcher
             onSnapshot(collection(db, "maduka", currentDukaID, "stok"), (snap) => {
                 let options = '<option value="">Chagua kutoka Stok...</option>';
                 let list = '';
                 snap.forEach(d => {
                     const s = d.data(); dukaStock[d.id] = s;
+                    const faidaMoja = s.beiS - s.beiB;
+                    const faidaJumla = faidaMoja * s.idadi;
                     options += `<option value="${d.id}">${s.bidhaa} (${s.idadi})</option>`;
-                    list += `<div class="item-row"><span>${s.bidhaa}<br><small>Stok: ${s.idadi}</small></span><span>${s.beiS}</span></div>`;
+                    list += `<div class="item-row">
+                        <span><b>${s.bidhaa}</b><br><small>Stok: ${s.idadi} | B: ${s.beiB} | S: ${s.beiS}</small></span>
+                        <span class="profit-tag">Faida: ${faidaJumla.toLocaleString()}</span>
+                    </div>`;
                 });
                 document.getElementById('selBidhaa').innerHTML = options;
                 document.getElementById('orodhaStock').innerHTML = list;
             });
 
-            // Mauzo Leo & Faida
             onSnapshot(query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID), where("tarehe", "==", leoDate)), (snap) => {
                 let h = ''; let total = 0; let profit = 0;
                 snap.forEach(d => {
@@ -247,7 +250,6 @@
                 document.getElementById('profitDisplay').innerText = `Faida ya Leo: Tsh ${profit.toLocaleString()}`;
             });
 
-            // Madeni Watcher (Fixed Undefined)
             onSnapshot(query(collection(db, "madeni"), where("dukaID", "==", currentDukaID)), (snap) => {
                 let h = ''; snap.forEach(d => {
                     const m = d.data();
@@ -256,7 +258,6 @@
                 document.getElementById('orodhaMadeni').innerHTML = h || 'Hakuna madeni.';
             });
             
-            // Staff List
             if(isAdmin) {
                 onSnapshot(collection(db, "maduka", currentDukaID, "staff"), (snap) => {
                     let h = ''; snap.forEach(d => { h += `<div class="item-row"><span>${d.id.toUpperCase()}</span><button onclick="futaStaff('${d.id}')" style="background:red; color:white; width:auto; padding:2px 10px;">X</button></div>`; });
@@ -268,7 +269,7 @@
         window.setHaliDuka = async (hali) => { await setDoc(doc(db, "mipangilio", currentDukaID + "_" + leoDate.replace(/\//g, '-')), { hali }); };
 
         window.hifadhiMzigo = async () => {
-            const bidhaa = document.getElementById('stkBidhaa').value;
+            const bidhaa = document.getElementById('stkBidhaa').value.trim();
             const bB = Number(document.getElementById('stkBeiB').value);
             const bS = Number(document.getElementById('stkBeiS').value);
             const idadi = Number(document.getElementById('stkIdadi').value);
@@ -303,7 +304,7 @@
                 await addDoc(collection(db, "madeni"), { jina, kiasi, hali:'deni', dukaID: currentDukaID, tarehe: leoDate });
                 document.getElementById('mdeni_jina').value=''; document.getElementById('mdeni_kiasi').value='';
                 alert("Deni limehifadhiwa!");
-            } else { alert("Weka jina na kiasi!"); }
+            }
         };
 
         window.lipa = async (id) => { if(confirm("Lipa deni hili?")) await updateDoc(doc(db, "madeni", id), { hali: 'lipa' }); };
