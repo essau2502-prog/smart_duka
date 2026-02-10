@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Duka Pro - Business Edition</title>
+    <title>Smart Duka Pro - Offline Enabled</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
-    
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; }
         .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .header { background: #2c3e50; color: white; padding: 15px; text-align: center; }
         .main-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 8px; margin: 10px; text-align: center; }
-        input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; }
+        input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; padding: 12px; margin-top: 5px; width: 100%; }
         .btn-primary { background: #2c3e50; color: white; }
         .btn-uza { background: #27ae60; color: white; }
-        .btn-deni { background: #8e44ad; color: white; }
-        .btn-futa { background: #ff4d4d; color: white; width: auto; padding: 5px 10px; font-size: 0.7rem; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
         .tab-bar { display: flex; overflow-x: auto; padding: 10px; gap: 5px; background: #fff; border-bottom: 1px solid #ddd; }
         .tab-btn { padding: 10px 15px; background: #bdc3c7; border-radius: 5px; white-space: nowrap; flex-shrink: 0; }
         .active-tab { background: #2c3e50; color: white; }
         .hidden { display: none !important; }
-        .badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        .offline-badge { background: #e67e22; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; display: none; }
     </style>
 </head>
 <body>
+
+    <div id="offlineNotify" style="background: #e67e22; color: white; text-align: center; font-size: 0.8rem; display: none;">Uko Offline - Mauzo yatajiongeza internet ikirudi.</div>
 
     <div id="authPage" class="auth-page">
         <h2>SMART DUKA PRO 🏪</h2>
@@ -42,20 +41,19 @@
             <input type="text" id="regDukaName" placeholder="Jina la Duka">
             <input type="text" id="regDukaID" placeholder="Tengeneza ID ya Duka">
             <input type="password" id="regPass" placeholder="Siri ya Admin">
-            <button onclick="handleRegister()" class="btn-primary" style="background: #27ae60;">KAMILISHA USAJILI</button>
-            <p onclick="toggleAuth()" style="color: #3498db; cursor: pointer; margin-top: 15px;">Rudi kwenye Login</p>
+            <button onclick="handleRegister()" class="btn-primary" style="background: #27ae60;">SAJILI DUKA</button>
+            <p onclick="toggleAuth()" style="color: #3498db; cursor: pointer; margin-top: 15px;">Rudi Login</p>
         </div>
-        <p id="authError" style="color: red;"></p>
     </div>
 
     <div id="mainApp" class="hidden">
         <div class="header">
             <h2 id="displayDukaName">DUKA LAKO</h2>
-            <span id="displayUser" class="badge"></span>
+            <div style="font-size: 0.8rem;">User: <span id="displayUser"></span> | <span id="syncStatus">Online ✅</span></div>
         </div>
 
         <div id="statusBox" class="total-box">
-            <div id="statusText">Inapakia...</div>
+            <div id="statusText">...</div>
             <div style="font-size: 2rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
             <small id="tareheLeo"></small>
         </div>
@@ -63,7 +61,7 @@
         <div class="tab-bar">
             <button id="tabMauzoBtn" class="tab-btn active-tab" onclick="switchTab('mauzo')">Mauzo</button>
             <button id="tabMadeniBtn" class="tab-btn" onclick="switchTab('madeni')">Madeni</button>
-            <button id="tabStaffBtn" class="tab-btn hidden" onclick="switchTab('staff')">Wafanyakazi</button>
+            <button id="tabStaffBtn" class="tab-btn hidden" onclick="switchTab('staff')">Staff</button>
         </div>
 
         <div id="tabMauzo">
@@ -77,17 +75,16 @@
                 <button onclick="ongezaMauzo()" class="btn-uza">UZA SASA</button>
             </div>
             <div class="main-card">
-                <h3>Orodha ya Leo</h3>
-                <div id="orodhaMauzo"></div>
-                <button id="btnFungaDuka" onclick="setHaliDuka('Imefungwa')" class="hidden" style="background: #e67e22; color: white; margin-top: 15px;">FUNGA BIASHARA</button>
+                <h3>Mauzo ya Leo</h3>
+                <div id="orodhaMauzo">Inapakia...</div>
             </div>
         </div>
 
         <div id="tabMadeni" class="hidden">
             <div class="main-card">
-                <input type="text" id="mdeni_jina" placeholder="Mteja">
+                <input type="text" id="mdeni_jina" placeholder="Jina la Mteja">
                 <input type="number" id="mdeni_kiasi" placeholder="Kiasi">
-                <button onclick="sajiliDeni()" class="btn-deni">HIFADHI DENI</button>
+                <button onclick="sajiliDeni()" style="background:#8e44ad; color:white;">ANDIKA DENI</button>
             </div>
             <div class="main-card" id="orodhaMadeni"></div>
         </div>
@@ -101,12 +98,12 @@
             <div class="main-card" id="orodhaStaff"></div>
         </div>
         
-        <button onclick="location.reload()" style="background: none; color: gray; margin-top: 20px;">Log Out</button>
+        <button onclick="location.reload()" style="background:none; color:gray; margin-top:20px;">Log Out</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc, deleteDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDXG65JsQ2pB96O33T5itgWUNJPH8IzFuk",
@@ -119,17 +116,26 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // --- MASTER OFFLINE SETTING ---
+        enableIndexedDbPersistence(db).catch((err) => {
+            console.error("Offline mode failed:", err.code);
+        });
+
         let currentDukaID = null;
         let currentUser = null;
         let isAdmin = false;
         let tareheLeo = new Date().toLocaleDateString('en-GB');
 
-        // KODI YA DOWNLOAD (PWA)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js').catch(err => console.log(err));
-            });
-        }
+        // Check Online/Offline status
+        window.addEventListener('online', () => {
+            document.getElementById('offlineNotify').style.display = 'none';
+            document.getElementById('syncStatus').innerText = "Online ✅";
+        });
+        window.addEventListener('offline', () => {
+            document.getElementById('offlineNotify').style.display = 'block';
+            document.getElementById('syncStatus').innerText = "Offline ⚠️";
+        });
 
         window.toggleAuth = () => {
             document.getElementById('loginForm').classList.toggle('hidden');
@@ -150,21 +156,23 @@
             const dukaID = document.getElementById('loginDukaID').value.toLowerCase().trim();
             const user = document.getElementById('loginUser').value.toLowerCase().trim();
             const pass = document.getElementById('loginPass').value;
-            const snap = await getDoc(doc(db, "maduka", dukaID));
 
-            if (snap.exists() && snap.data().status === 'active') {
-                const data = snap.data();
-                if (user === 'admin' && pass === data.adminPass) {
-                    isAdmin = true;
-                    completeLogin(dukaID, data.name, 'Admin');
-                } else {
-                    const sSnap = await getDoc(doc(db, "maduka", dukaID, "staff", user));
-                    if (sSnap.exists() && sSnap.data().pass === pass) {
-                        isAdmin = false;
-                        completeLogin(dukaID, data.name, user);
-                    } else { alert("User/Pass imekosewa!"); }
-                }
-            } else { alert("Duka halipo au limefungwa!"); }
+            try {
+                const snap = await getDoc(doc(db, "maduka", dukaID));
+                if (snap.exists() && snap.data().status === 'active') {
+                    const data = snap.data();
+                    if (user === 'admin' && pass === data.adminPass) {
+                        isAdmin = true;
+                        completeLogin(dukaID, data.name, 'Admin');
+                    } else {
+                        const sSnap = await getDoc(doc(db, "maduka", dukaID, "staff", user));
+                        if (sSnap.exists() && sSnap.data().pass === pass) {
+                            isAdmin = false;
+                            completeLogin(dukaID, data.name, user);
+                        } else { alert("User au Pass imekosewa!"); }
+                    }
+                } else { alert("Duka halipo au limefungwa!"); }
+            } catch(e) { alert("Login inahitaji Internet mara ya kwanza!"); }
         };
 
         function completeLogin(id, name, user) {
@@ -178,22 +186,22 @@
         }
 
         function anzishaLogic() {
+            // Live Update (Hata Offline)
             onSnapshot(doc(db, "mipangilio", currentDukaID + "_" + tareheLeo.replace(/\//g, '-')), (snap) => {
                 const hali = snap.exists() ? snap.data().hali : 'Imefungwa';
                 document.getElementById('statusText').innerText = "BIASHARA " + hali.toUpperCase();
                 document.getElementById('statusBox').style.background = hali === 'Wazi' ? "#27ae60" : "#e74c3c";
                 document.getElementById('sectionMauzoInput').classList.toggle('hidden', hali === 'Imefungwa');
                 document.getElementById('cardFungua').style.display = hali === 'Imefungwa' ? 'block' : 'none';
-                document.getElementById('btnFungaDuka').classList.toggle('hidden', hali === 'Imefungwa' || !isAdmin);
             });
 
             onSnapshot(query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID), where("tarehe", "==", tareheLeo)), (snap) => {
                 let h = ''; let total = 0;
                 snap.forEach(d => {
                     const m = d.data(); total += m.jumla;
-                    h += `<div class="item-row"><span>${m.bidhaa} (x${m.idadi})</span><span>${m.jumla.toLocaleString()} ${isAdmin ? `<button class="btn-futa" onclick="futa('mauzo','${d.id}')">X</button>` : ''}</span></div>`;
+                    h += `<div class="item-row"><span>${m.bidhaa} (x${m.idadi})</span><span>${m.jumla.toLocaleString()} ${isAdmin ? `<button onclick="futa('mauzo','${d.id}')" style="background:red;color:white;padding:2px 5px;width:auto;">X</button>` : ''}</span></div>`;
                 });
-                document.getElementById('orodhaMauzo').innerHTML = h;
+                document.getElementById('orodhaMauzo').innerHTML = h || 'Hakuna mauzo bado.';
                 document.getElementById('leoTotal').innerText = total.toLocaleString();
             });
 
@@ -201,48 +209,59 @@
                 let h = '';
                 snap.forEach(d => {
                     const m = d.data();
-                    h += `<div class="item-row"><span>${m.jina}<br><small>${m.kiasi}</small></span><span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')">✓</button>`:'✅'}</span></div>`;
+                    h += `<div class="item-row" style="${m.hali==='lipa'?'opacity:0.5':''}"><span>${m.jina}<br><small>Tsh ${m.kiasi}</small></span><span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')">✓</button>`:'✅'}</span></div>`;
                 });
-                document.getElementById('orodhaMadeni').innerHTML = h;
+                document.getElementById('orodhaMadeni').innerHTML = h || 'Safi! Hakuna madeni.';
             });
 
             if(isAdmin) {
                 onSnapshot(collection(db, "maduka", currentDukaID, "staff"), (snap) => {
-                    let h = ''; snap.forEach(d => { h += `<div class="item-row"><span>${d.id}</span><button onclick="futaStaff('${d.id}')">X</button></div>`; });
+                    let h = ''; snap.forEach(d => { h += `<div class="item-row"><span>${d.id}</span><button onclick="futaStaff('${d.id}')" style="background:red;color:white;width:auto;padding:5px;">Ondoa</button></div>`; });
                     document.getElementById('orodhaStaff').innerHTML = h;
                 });
             }
         }
 
         window.setHaliDuka = async (hali) => { await setDoc(doc(db, "mipangilio", currentDukaID + "_" + tareheLeo.replace(/\//g, '-')), { hali }); };
+        
         window.ongezaMauzo = async () => {
             const b = document.getElementById('bidhaa').value;
             const p = Number(document.getElementById('bei').value);
             const i = Number(document.getElementById('idadi').value);
             if(b && p) {
-                await addDoc(collection(db, "mauzo"), { bidhaa:b, bei:p, idadi:i, jumla:p*i, dukaID:currentDukaID, tarehe:tareheLeo, muuzaji: currentUser });
+                // Hapa data itasave hata ukiwa Offline!
+                await addDoc(collection(db, "mauzo"), { 
+                    bidhaa:b, bei:p, idadi:i, jumla:p*i, 
+                    dukaID:currentDukaID, tarehe:tareheLeo, 
+                    muuzaji: currentUser, timestamp: Date.now() 
+                });
                 document.getElementById('bidhaa').value=''; document.getElementById('bei').value='';
             }
         };
+
         window.sajiliDeni = async () => {
             const j = document.getElementById('mdeni_jina').value;
             const k = Number(document.getElementById('mdeni_kiasi').value);
             if(j && k) await addDoc(collection(db, "madeni"), { jina:j, kiasi:k, hali:'deni', dukaID:currentDukaID });
         };
+
         window.lipa = async (id) => { await updateDoc(doc(db, "madeni", id), { hali: 'lipa' }); };
         window.futa = async (col, id) => { if(confirm("Futa?")) await deleteDoc(doc(db, col, id)); };
+        window.futaStaff = async (u) => { if(confirm("Ondoa mfanyakazi?")) await deleteDoc(doc(db, "maduka", currentDukaID, "staff", u)); };
         window.sajiliStaff = async () => {
             const u = document.getElementById('staffUser').value.toLowerCase().trim();
             const p = document.getElementById('staffPass').value;
             if(u && p) await setDoc(doc(db, "maduka", currentDukaID, "staff", u), { pass: p });
         };
+
         window.switchTab = (t) => {
             ['mauzo','madeni','staff'].forEach(id => {
                 document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1)).classList.toggle('hidden', t !== id);
                 document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1) + 'Btn').classList.toggle('active-tab', t === id);
             });
         };
-        document.getElementById('tareheLeo').innerText = new Date().toLocaleDateString('sw-TZ', { day:'numeric', month:'long' });
+
+        document.getElementById('tareheLeo').innerText = new Date().toLocaleDateString('sw-TZ', { weekday:'long', day:'numeric', month:'long' });
     </script>
 </body>
 </html>
