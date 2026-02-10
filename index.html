@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Duka Pro - Profit & Stock</title>
+    <title>Smart Duka Pro - The Ultimate Boss</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <style>
@@ -20,9 +20,9 @@
         .tab-btn { padding: 10px 15px; background: #bdc3c7; border-radius: 5px; white-space: nowrap; flex-shrink: 0; }
         .active-tab { background: #2c3e50; color: white; }
         .hidden { display: none !important; }
-        .profit-text { color: #27ae60; font-weight: bold; font-size: 0.8rem; }
-        .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #previewImg { width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; border-radius: 5px; display: none; }
+        .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #previewImg { width: 100%; max-height: 150px; object-fit: contain; margin-top: 10px; display: none; border-radius: 5px; }
+        .badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -41,41 +41,50 @@
             <input type="text" id="regDukaID" placeholder="ID ya Duka">
             <input type="password" id="regPass" placeholder="Siri ya Admin">
             <button onclick="handleRegister()" class="btn-primary" style="background: #27ae60;">SAJILI DUKA</button>
+            <p onclick="toggleAuth()" style="color: #3498db; cursor: pointer; margin-top: 15px;">Rudi Login</p>
         </div>
     </div>
 
     <div id="mainApp" class="hidden">
         <div class="header">
             <h2 id="displayDukaName">DUKA LAKO</h2>
-            <div style="font-size: 0.8rem;">Mtumiaji: <span id="displayUser"></span></div>
+            <span id="displayUser" class="badge"></span>
         </div>
 
         <div id="statusBox" class="total-box">
-            <div id="statusText">MZIGO LEO</div>
-            <div style="font-size: 1.8rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
+            <div id="statusText">Inapakia...</div>
+            <div style="font-size: 2rem; font-weight: bold;">Tsh <span id="leoTotal">0</span></div>
             <div id="profitDisplay" style="font-size: 0.9rem; opacity: 0.9;">Faida ya Leo: Tsh 0</div>
+            <small id="tareheDisplay"></small>
         </div>
 
         <div class="tab-bar">
-            <button id="tabMauzoBtn" class="tab-btn active-tab" onclick="switchTab('mauzo')">Uza</button>
-            <button id="tabStockBtn" class="tab-btn" onclick="switchTab('stock')">Mzigo Mpya 📦</button>
+            <button id="tabMauzoBtn" class="tab-btn active-tab" onclick="switchTab('mauzo')">Mauzo Leo</button>
+            <button id="tabStockBtn" class="tab-btn" onclick="switchTab('stock')">Mzigo (Stok) 📦</button>
             <button id="tabHistoryBtn" class="tab-btn" onclick="switchTab('history')">Ripoti 📊</button>
             <button id="tabMadeniBtn" class="tab-btn" onclick="switchTab('madeni')">Madeni</button>
+            <button id="tabStaffBtn" class="tab-btn hidden" onclick="switchTab('staff')">Staff</button>
         </div>
 
         <div id="tabMauzo">
-            <div class="main-card">
-                <h3>Fanya Mauzo</h3>
+            <div id="cardFungua" style="display:none; text-align:center;" class="main-card">
+                <button onclick="setHaliDuka('Wazi')" class="btn-primary" style="background:#27ae60;">FUNGUA BIASHARA LEO</button>
+            </div>
+            
+            <div id="sectionMauzoInput" class="main-card hidden">
+                <h3>Uza Bidhaa</h3>
                 <select id="selBidhaa" onchange="updatePreselPrice()">
-                    <option value="">Chagua Bidhaa...</option>
+                    <option value="">Chagua kutoka Stok...</option>
                 </select>
                 <input type="number" id="uzaBei" placeholder="Bei ya Kuuzia">
                 <input type="number" id="uzaIdadi" placeholder="Idadi" value="1">
                 <button onclick="ongezaMauzo()" class="btn-uza">KAMILISHA MAUZO</button>
             </div>
+
             <div class="main-card">
-                <h3>Mauzo ya Leo</h3>
+                <h3>Orodha ya Leo</h3>
                 <div id="orodhaMauzo">Inapakia...</div>
+                <button id="btnFungaDuka" onclick="setHaliDuka('Imefungwa')" class="hidden" style="background: #e67e22; color: white; margin-top: 15px;">FUNGA BIASHARA</button>
             </div>
         </div>
 
@@ -86,25 +95,28 @@
                 <input type="number" id="stkBeiB" placeholder="Bei ya Kununulia (Moja)">
                 <input type="number" id="stkBeiS" placeholder="Bei ya Kuuzia (Moja)">
                 <input type="number" id="stkIdadi" placeholder="Idadi/Stok">
-                
-                <p style="font-size: 0.8rem; color: #666;">Piga picha ya Bidhaa/Risiti (M-Pesa):</p>
-                <input type="file" id="stkFile" accept="image/*" capture="environment" onchange="previewImage(this)">
+                <p style="font-size: 0.8rem; color: #666;">Picha ya Bidhaa/Risiti (M-Pesa):</p>
+                <input type="file" accept="image/*" capture="environment" onchange="previewImage(this)">
                 <img id="previewImg">
-                
-                <button onclick="hifadhiMzigo()" class="btn-primary" style="background:#e67e22;">HIFADHI MZIGO</button>
+                <button onclick="hifadhiMzigo()" class="btn-primary">HIFADHI MZIGO</button>
             </div>
             <div class="main-card">
-                <h3>Stok iliyopo</h3>
+                <h3>Mzigo Uliopo (Stok)</h3>
                 <div id="orodhaStock"></div>
             </div>
         </div>
 
         <div id="tabHistory" class="hidden">
             <div class="main-card">
-                <h3>Ripoti ya Faida (Mwezi)</h3>
+                <h3>Ripoti ya Mwezi 📅</h3>
                 <input type="month" id="reportMonth">
-                <button onclick="pataRipotiYaMwezi()" class="btn-primary">Tazama Ripoti</button>
+                <button onclick="pataRipotiYaMwezi()" class="btn-primary">Tazama Ripoti & Faida</button>
                 <div id="monthSummary"></div>
+            </div>
+            <div class="main-card">
+                <h3>Tafuta Siku Moja 🔍</h3>
+                <input type="date" id="searchDate" onchange="tafutaHistoria()">
+                <div id="historyResult"></div>
             </div>
         </div>
 
@@ -117,7 +129,16 @@
             <div id="orodhaMadeni" class="main-card"></div>
         </div>
 
-        <button onclick="location.reload()" style="margin:20px auto; display:block; border:none; color:gray;">Log Out</button>
+        <div id="tabStaff" class="hidden">
+            <div class="main-card">
+                <input type="text" id="staffUser" placeholder="Jina">
+                <input type="password" id="staffPass" placeholder="Password">
+                <button onclick="sajiliStaff()" class="btn-primary">SAJILI</button>
+            </div>
+            <div id="orodhaStaff" class="main-card"></div>
+        </div>
+
+        <button onclick="location.reload()" style="margin:20px auto; display:block; color:gray; background:none; border:1px solid #ccc; padding:5px 10px;">Log Out</button>
     </div>
 
     <script type="module">
@@ -136,19 +157,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let currentDukaID = null;
-        let currentUser = null;
-        let isAdmin = false;
+        let currentDukaID = null; let currentUser = null; let isAdmin = false;
         let leoDate = new Date().toLocaleDateString('en-GB');
-        let dukaStock = {}; // Local copy for profit calc
+        let dukaStock = {};
 
-        // PREVIEW IMAGE
         window.previewImage = (input) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = (e) => { 
                 const img = document.getElementById('previewImg');
-                img.src = e.target.result;
-                img.style.display = 'block';
+                img.src = e.target.result; img.style.display = 'block'; 
             };
             if(input.files[0]) reader.readAsDataURL(input.files[0]);
         };
@@ -166,16 +183,14 @@
             if (snap.exists() && snap.data().status === 'active') {
                 const data = snap.data();
                 if (user === 'admin' && pass === data.adminPass) {
-                    isAdmin = true;
-                    completeLogin(dukaID, data.name, 'Admin');
+                    isAdmin = true; completeLogin(dukaID, data.name, 'Admin');
                 } else {
                     const sSnap = await getDoc(doc(db, "maduka", dukaID, "staff", user));
                     if (sSnap.exists() && sSnap.data().pass === pass) {
-                        isAdmin = false;
-                        completeLogin(dukaID, data.name, user);
-                    } else { alert("Siri imekosewa!"); }
+                        isAdmin = false; completeLogin(dukaID, data.name, user);
+                    } else { alert("User/Pass imekosewa!"); }
                 }
-            } else { alert("Duka halipo!"); }
+            } else { alert("Duka halipo au limefungwa!"); }
         };
 
         function completeLogin(id, name, user) {
@@ -184,86 +199,87 @@
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('displayDukaName').innerText = name;
             document.getElementById('displayUser').innerText = user.toUpperCase();
+            if(isAdmin) document.getElementById('tabStaffBtn').classList.remove('hidden');
             anzishaLogic();
         }
 
         function anzishaLogic() {
-            // Watch Stock
+            // Hali ya Duka (Fungua/Funga)
+            onSnapshot(doc(db, "mipangilio", currentDukaID + "_" + leoDate.replace(/\//g, '-')), (snap) => {
+                const hali = snap.exists() ? snap.data().hali : 'Imefungwa';
+                document.getElementById('statusText').innerText = "BIASHARA " + hali.toUpperCase();
+                document.getElementById('statusBox').style.background = hali === 'Wazi' ? "#27ae60" : "#e74c3c";
+                document.getElementById('sectionMauzoInput').classList.toggle('hidden', hali === 'Imefungwa');
+                document.getElementById('cardFungua').style.display = hali === 'Imefungwa' ? 'block' : 'none';
+                document.getElementById('btnFungaDuka').classList.toggle('hidden', hali === 'Imefungwa' || !isAdmin);
+            });
+
+            // Stok Watcher
             onSnapshot(collection(db, "maduka", currentDukaID, "stok"), (snap) => {
-                let options = '<option value="">Chagua Bidhaa...</option>';
+                let options = '<option value="">Chagua kutoka Stok...</option>';
                 let list = '';
                 snap.forEach(d => {
-                    const s = d.data();
-                    dukaStock[d.id] = s;
-                    options += `<option value="${d.id}">${s.bidhaa} (Inabaki: ${s.idadi})</option>`;
-                    list += `<div class="item-row"><span>${s.bidhaa}<br><small>Bei B: ${s.beiB} | S: ${s.beiS}</small></span><span>${s.idadi}</span></div>`;
+                    const s = d.data(); dukaStock[d.id] = s;
+                    options += `<option value="${d.id}">${s.bidhaa} (${s.idadi})</option>`;
+                    list += `<div class="item-row"><span>${s.bidhaa}<br><small>Stok: ${s.idadi}</small></span><span>${s.beiS}</span></div>`;
                 });
                 document.getElementById('selBidhaa').innerHTML = options;
                 document.getElementById('orodhaStock').innerHTML = list;
             });
 
-            // Watch Mauzo Leo & Calc Profit
+            // Mauzo Leo & Faida
             onSnapshot(query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID), where("tarehe", "==", leoDate)), (snap) => {
-                let h = ''; let totalSales = 0; let totalProfit = 0;
+                let h = ''; let total = 0; let profit = 0;
                 snap.forEach(d => {
-                    const m = d.data();
-                    totalSales += m.jumla;
-                    totalProfit += (m.profit || 0);
+                    const m = d.data(); total += m.jumla; profit += (m.profit || 0);
                     h += `<div class="item-row"><span>${m.bidhaa} (x${m.idadi})</span><span>${m.jumla.toLocaleString()}</span></div>`;
                 });
                 document.getElementById('orodhaMauzo').innerHTML = h || 'Hakuna mauzo.';
-                document.getElementById('leoTotal').innerText = totalSales.toLocaleString();
-                document.getElementById('profitDisplay').innerText = `Faida ya Leo: Tsh ${totalProfit.toLocaleString()}`;
+                document.getElementById('leoTotal').innerText = total.toLocaleString();
+                document.getElementById('profitDisplay').innerText = `Faida ya Leo: Tsh ${profit.toLocaleString()}`;
+            });
+
+            // Madeni
+            onSnapshot(query(collection(db, "madeni"), where("dukaID", "==", currentDukaID)), (snap) => {
+                let h = ''; snap.forEach(d => {
+                    const m = d.data();
+                    h += `<div class="item-row"><span>${m.jina}<br><small>${m.kiasi}</small></span><span>${m.hali!=='lipa'?`<button onclick="lipa('${d.id}')">✓</button>`:'✅'}</span></div>`;
+                });
+                document.getElementById('orodhaMadeni').innerHTML = h;
             });
         }
 
         window.updatePreselPrice = () => {
-            const bidhaaId = document.getElementById('selBidhaa').value;
-            if(bidhaaId && dukaStock[bidhaaId]) {
-                document.getElementById('uzaBei').value = dukaStock[bidhaaId].beiS;
-            }
+            const bId = document.getElementById('selBidhaa').value;
+            if(bId) document.getElementById('uzaBei').value = dukaStock[bId].beiS;
         };
+
+        window.setHaliDuka = async (hali) => { await setDoc(doc(db, "mipangilio", currentDukaID + "_" + leoDate.replace(/\//g, '-')), { hali }); };
 
         window.hifadhiMzigo = async () => {
             const bidhaa = document.getElementById('stkBidhaa').value;
-            const beiB = Number(document.getElementById('stkBeiB').value);
-            const beiS = Number(document.getElementById('stkBeiS').value);
+            const bB = Number(document.getElementById('stkBeiB').value);
+            const bS = Number(document.getElementById('stkBeiS').value);
             const idadi = Number(document.getElementById('stkIdadi').value);
-            
-            if(bidhaa && beiB && beiS) {
-                // Tunatumia jina la bidhaa kama ID kwa urahisi
-                const bidhaaID = bidhaa.toLowerCase().replace(/\s/g, '_');
-                await setDoc(doc(db, "maduka", currentDukaID, "stok", bidhaaID), {
-                    bidhaa, beiB, beiS, idadi, muuzaji: currentUser
-                });
-                alert("Mzigo umehifadhiwa!");
-                document.getElementById('stkBidhaa').value = '';
-                document.getElementById('previewImg').style.display = 'none';
+            if(bidhaa && bB) {
+                const id = bidhaa.toLowerCase().replace(/\s/g, '_');
+                await setDoc(doc(db, "maduka", currentDukaID, "stok", id), { bidhaa, beiB:bB, beiS:bS, idadi });
+                alert("Mzigo umesajiliwa!");
             }
         };
 
         window.ongezaMauzo = async () => {
             const bId = document.getElementById('selBidhaa').value;
-            const uzaBei = Number(document.getElementById('uzaBei').value);
-            const uzaIdadi = Number(document.getElementById('uzaIdadi').value);
-            
-            if(bId && uzaBei) {
+            const bei = Number(document.getElementById('uzaBei').value);
+            const qty = Number(document.getElementById('uzaIdadi').value);
+            if(bId && bei) {
                 const item = dukaStock[bId];
-                const profitPerItem = uzaBei - item.beiB;
-                const totalProfit = profitPerItem * uzaIdadi;
-                
-                // 1. Save Sale
-                await addDoc(collection(db, "mauzo"), {
-                    bidhaa: item.bidhaa, idadi: uzaIdadi, bei: uzaBei, jumla: uzaBei * uzaIdadi,
-                    profit: totalProfit, dukaID: currentDukaID, tarehe: leoDate, muuzaji: currentUser
+                const faida = (bei - item.beiB) * qty;
+                await addDoc(collection(db, "mauzo"), { 
+                    bidhaa: item.bidhaa, idadi: qty, bei, jumla: bei*qty, profit: faida, 
+                    dukaID: currentDukaID, tarehe: leoDate, muuzaji: currentUser 
                 });
-                
-                // 2. Update Stock (Punguza idadi)
-                await updateDoc(doc(db, "maduka", currentDukaID, "stok", bId), {
-                    idadi: item.idadi - uzaIdadi
-                });
-                
-                document.getElementById('uzaIdadi').value = 1;
+                await updateDoc(doc(db, "maduka", currentDukaID, "stok", bId), { idadi: item.idadi - qty });
             }
         };
 
@@ -274,23 +290,21 @@
             const snap = await getDocs(query(collection(db, "mauzo"), where("dukaID", "==", currentDukaID)));
             let tS = 0; let tP = 0;
             snap.forEach(d => {
-                const data = d.data();
-                const [day, mon, year] = data.tarehe.split('/');
-                if(mon === m && year === y) { tS += data.jumla; tP += (data.profit || 0); }
+                const data = d.data(); const [dd, mm, yy] = data.tarehe.split('/');
+                if(mm === m && yy === y) { tS += data.jumla; tP += (data.profit || 0); }
             });
-            document.getElementById('monthSummary').innerHTML = `
-                <div style="background:#2c3e50; color:white; padding:15px; border-radius:8px; margin-top:10px;">
-                    Mauzo: Tsh ${tS.toLocaleString()}<br>
-                    <span style="color:#27ae60; font-size:1.2rem;">FAIDA: Tsh ${tP.toLocaleString()}</span>
-                </div>`;
+            document.getElementById('monthSummary').innerHTML = `<div style="background:#2c3e50; color:white; padding:10px; border-radius:5px; margin-top:10px;">Mauzo: ${tS.toLocaleString()}<br>FAIDA: ${tP.toLocaleString()}</div>`;
         };
 
         window.switchTab = (t) => {
-            ['mauzo','stock','history','madeni'].forEach(id => {
-                document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1)).classList.toggle('hidden', t !== id);
-                document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1) + 'Btn').classList.toggle('active-tab', t === id);
+            ['mauzo','stock','history','madeni','staff'].forEach(id => {
+                const el = document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1));
+                if(el) el.classList.toggle('hidden', t !== id);
+                const btn = document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1) + 'Btn');
+                if(btn) btn.classList.toggle('active-tab', t === id);
             });
         };
+        document.getElementById('tareheDisplay').innerText = "Leo: " + leoDate;
     </script>
 </body>
 </html>
