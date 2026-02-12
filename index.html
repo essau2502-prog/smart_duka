@@ -225,7 +225,7 @@
         };
         window.doStok = async () => {
             const j = document.getElementById('sJina').value, bB = Number(document.getElementById('sBkununua').value), bS = Number(document.getElementById('sBkuuza').value), q = Number(document.getElementById('sQty').value);
-            if(j) { const id = j.toLowerCase().replace(/\s/g, '_'); await setDoc(doc(db, \"maduka\", curID, \"stok\", id), { bidhaa: j, beiB: bB, beiS: bS, qty: q }); alert(\"Stok Imesave!\"); }
+            if(j) { const id = j.toLowerCase().replace(/\s/g, '_'); await setDoc(doc(db, "maduka", curID, "stok", id), { bidhaa: j, beiB: bB, beiS: bS, qty: q }); alert("Stok Imesave!"); }
         };
         window.fetchReports = async () => {
             const rd = document.getElementById('repDate').value; if(!rd) return;
