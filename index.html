@@ -21,9 +21,7 @@
         .active-tab { background: #2c3e50; color: white; }
         .hidden { display: none !important; }
         .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        .profit-text { color: #27ae60; font-size: 0.8rem; font-weight: bold; }
-        /* Style ya Summary */
-        .asset-summary { background: #34495e; color: white; padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 0.9rem; }
+        .asset-summary { background: #34495e; color: white; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.95rem; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -195,25 +193,21 @@
             });
             onSnapshot(collection(db, "maduka", curID, "stok"), (snap) => {
                 let h = "", opts = ""; 
-                let totalCost = 0, totalProfit = 0;
+                let tCost = 0, tProf = 0;
                 snap.forEach(d => {
                     const data = d.data(); curStock[d.id] = data;
-                    // Hesabu hapa
-                    totalCost += (data.beiB * data.qty);
-                    totalProfit += ((data.beiS - data.beiB) * data.qty);
-
+                    tCost += (data.beiB * data.qty);
+                    tProf += ((data.beiS - data.beiB) * data.qty);
                     h += `<div class="item-row"><span><b>${data.bidhaa}</b> (x${data.qty})</span><span>${data.beiS}</span></div>`;
                     opts += `<option value="${data.bidhaa}">`;
                 });
                 document.getElementById('listStok').innerHTML = h; document.getElementById('listB').innerHTML = opts;
-                
-                // Onyesha Summary kama ni Admin
                 if(isAdmin) {
                     document.getElementById('stockSummary').innerHTML = `
-                        <b>MTIHAN WA DUKA:</b><br>
-                        Thamani ya Mtaji: Tsh ${totalCost.toLocaleString()}<br>
-                        Faida Inayotegemewa: Tsh ${totalProfit.toLocaleString()}<br>
-                        <b>Jumla ya Thamani: Tsh ${(totalCost + totalProfit).toLocaleString()}</b>
+                        <strong>HESABU ZA MZIGO:</strong><br>
+                        • Thamani ya Mtaji: Tsh ${tCost.toLocaleString()}<br>
+                        • Faida ya Baadae: Tsh ${tProf.toLocaleString()}<br>
+                        • <b>Jumla ya Thamani: Tsh ${(tCost + tProf).toLocaleString()}</b>
                     `;
                 }
             });
