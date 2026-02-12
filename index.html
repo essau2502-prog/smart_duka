@@ -9,7 +9,7 @@
         .header { background: #2c3e50; color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; }
         .main-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .total-box { background: #27ae60; color: white; padding: 20px; border-radius: 8px; margin: 10px; text-align: center; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 1rem; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 1rem; }
         button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; padding: 12px; margin-top: 5px; width: 100%; transition: 0.3s; }
         .btn-primary { background: #2c3e50; color: white; }
         .btn-uza { background: #27ae60; color: white; }
@@ -22,9 +22,6 @@
         .hidden { display: none !important; }
         .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         .profit-text { color: #27ae60; font-size: 0.8rem; font-weight: bold; }
-        
-        /* MUHIMU: Style ya Taarifa kutoka kwa Essau (Developer) */
-        .dev-notice { background: #f1c40f; color: #000; padding: 12px; margin: 10px; border-radius: 8px; font-size: 0.9rem; border-left: 6px solid #e67e22; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -48,10 +45,6 @@
     </div>
 
     <div id="mainApp" class="hidden">
-        <div id="devNoticeBox" class="dev-notice hidden">
-            📢 TAARIFA: <span id="devMsgText">...</span>
-        </div>
-
         <div class="header">
             <h2 id="dispDuka">DUKA</h2>
             <div id="stDisplay" style="padding:2px 10px; border-radius:10px; font-size:0.8rem; display:inline-block;">...</div><br>
@@ -105,9 +98,12 @@
         </div>
 
         <div id="tabReports" class="main-card hidden">
-            <h4>Ripoti</h4>
+            <h4>Ripoti za Mauzo</h4>
             <input type="date" id="repDate" onchange="fetchReports()">
-            <div id="repSummary">Mauzo: <b id="repT">0</b></div>
+            <div id="repSummary" style="margin-top:10px;">
+                <div style="background:#f9f9f9; padding:10px; border-radius:5px;">Mauzo: <b id="repT">0</b></div>
+                <div style="background:#f9f9f9; padding:10px; border-radius:5px; margin-top:5px;" id="repPBox">Faida: <b id="repP">0</b></div>
+            </div>
             <hr>
             <div id="listReports"></div>
         </div>
@@ -126,7 +122,7 @@
             <div id="admStaff" class="hidden">
                 <input type="text" id="stfJina" placeholder="Jina Staff">
                 <input type="password" id="stfPass" placeholder="Siri">
-                <button onclick="doStaff()" class="btn-primary">ONGEZA STAFF</button><hr>
+                <button onclick="doStaff()" class="btn-primary">ONGEZA</button><hr>
             </div>
             <div id="listStaff"></div>
         </div>
@@ -134,13 +130,7 @@
         <div id="tabSupport" class="hidden main-card">
             <div style="text-align:center; padding:15px;">
                 <strong>ESSAU BRAND OFFICIAL</strong><br>
-                <a href="https://wa.me/255758244950" style="display:block; background:#25D366; color:white; padding:12px; text-decoration:none; border-radius:5px; margin:10px 0;">WHATSAPP YA DEVELOPER</a>
-                
-                <div style="border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fefefe; text-align: left;">
-                    <label style="font-weight: bold; font-size: 0.8rem;">Maoni/Ripoti kwa Developer:</label>
-                    <textarea id="userFeedback" rows="3" placeholder="Andika ujumbe wako hapa kisha tuma..."></textarea>
-                    <button onclick="sendFeedback()" style="background: #3498db; color: white;">TUMA MAONI</button>
-                </div>
+                <a href="https://wa.me/255758244950" style="display:block; background:#25D366; color:white; padding:12px; text-decoration:none; border-radius:5px; margin-top:10px;">WHATSAPP</a>
             </div>
             <button onclick="location.reload()" style="margin-top:20px; background:#e74c3c; color:white;">LOG OUT</button>
         </div>
@@ -195,33 +185,18 @@
         }
 
         function runLogic() {
-            // 1. LISTEN KWA TAARIFA ZA DEVELOPER (ESSAU)
-            // Kazi yako: Nenda Firebase Console -> Firestore -> Tengeneza collection "system", kisha document "notice", weka field "msg"
-            onSnapshot(doc(db, "system", "notice"), (d) => {
-                if(d.exists() && d.data().msg) {
-                    document.getElementById('devNoticeBox').classList.remove('hidden');
-                    document.getElementById('devMsgText').innerText = d.data().msg;
-                } else {
-                    document.getElementById('devNoticeBox').classList.add('hidden');
-                }
-            });
-
             onSnapshot(doc(db, "maduka", curID), (d) => {
                 const st = document.getElementById('stDisplay');
                 st.innerText = d.data().hali; st.style.background = d.data().hali === 'Wazi' ? '#2ecc71' : '#e74c3c';
             });
-
             onSnapshot(collection(db, "maduka", curID, "stok"), (snap) => {
-                let h = "", opts = "";
-                snap.forEach(d => {
+                let h = "", opts = ""; snap.forEach(d => {
                     const data = d.data(); curStock[d.id] = data;
                     h += `<div class="item-row"><span><b>${data.bidhaa}</b> (x${data.qty})</span><span>${data.beiS}</span></div>`;
                     opts += `<option value="${data.bidhaa}">`;
                 });
-                document.getElementById('listStok').innerHTML = h;
-                document.getElementById('listB').innerHTML = opts;
+                document.getElementById('listStok').innerHTML = h; document.getElementById('listB').innerHTML = opts;
             });
-
             onSnapshot(query(collection(db, "mauzo"), where("dukaID", "==", curID), where("tarehe", "==", leo)), (snap) => {
                 let t = 0, p = 0, h = "";
                 snap.forEach(d => { t += d.data().jumla; p += d.data().profit; h += `<div class="item-row"><span>${d.data().bidhaa}</span><b>${d.data().jumla.toLocaleString()}</b></div>`; });
@@ -229,28 +204,16 @@
                 if(isAdmin) document.getElementById('valProfit').innerText = "Faida Leo: Tsh " + p.toLocaleString();
                 document.getElementById('listMauzo').innerHTML = h;
             });
-            
-            // Listeners zingine za madeni na staff zinaendelea hapa...
+            onSnapshot(collection(db, "maduka", curID, "madeni"), (snap) => {
+                let h = ""; snap.forEach(d => { h += `<div class="item-row"><span><b>${d.data().jina}</b><br>${d.data().kitu}</span><div><b>${d.data().kiasi.toLocaleString()}</b> <button onclick="delDeni('${d.id}')" class="btn-futa">LIPA</button></div></div>`; });
+                document.getElementById('listMadeni').innerHTML = h;
+            });
+            onSnapshot(collection(db, "maduka", curID, "staff"), (snap) => {
+                let h = ""; snap.forEach(d => { h += `<div class="item-row"><span>${d.id}</span><button onclick="delStaff('${d.id}')" class="btn-futa">Futa</button></div>`; });
+                document.getElementById('listStaff').innerHTML = h;
+            });
         }
 
-        // 2. TUMA MAONI KWENYE FIREBASE (ESSAU ATAZIONA KWENYE CONSOLE)
-        window.sendFeedback = async () => {
-            const msg = document.getElementById('userFeedback').value;
-            const dName = document.getElementById('dispDuka').innerText;
-            if(!msg) return;
-            try {
-                await addDoc(collection(db, "essau_feedbacks"), {
-                    dukaID: curID,
-                    dukaName: dName,
-                    ujumbe: msg,
-                    tarehe: new Date().toLocaleString()
-                });
-                alert("Asante! Maoni yako yametumwa kwa Developer (Essau Brand).");
-                document.getElementById('userFeedback').value = "";
-            } catch(e) { alert("Imefeli kutuma!"); }
-        };
-
-        // KODI ZINGINE ZA MAUZO, STOK NA REPORTS ZINABAKI VILE VILE...
         window.doUza = async () => {
             const j = document.getElementById('uJina').value, b = Number(document.getElementById('uBei').value), q = Number(document.getElementById('uQty').value);
             if(!j || b <= 0) return;
@@ -262,19 +225,22 @@
         };
         window.doStok = async () => {
             const j = document.getElementById('sJina').value, bB = Number(document.getElementById('sBkununua').value), bS = Number(document.getElementById('sBkuuza').value), q = Number(document.getElementById('sQty').value);
-            if(j) { const id = j.toLowerCase().replace(/\s/g, '_'); await setDoc(doc(db, "maduka", curID, "stok", id), { bidhaa: j, beiB: bB, beiS: bS, qty: q }); alert("Stok Imesave!"); }
+            if(j) { const id = j.toLowerCase().replace(/\s/g, '_'); await setDoc(doc(db, \"maduka\", curID, \"stok\", id), { bidhaa: j, beiB: bB, beiS: bS, qty: q }); alert(\"Stok Imesave!\"); }
         };
         window.fetchReports = async () => {
             const rd = document.getElementById('repDate').value; if(!rd) return;
             const p = rd.split('-'); const td = `${p[2]}/${p[1]}/${p[0]}`;
             const snap = await getDocs(query(collection(db, "mauzo"), where("dukaID", "==", curID), where("tarehe", "==", td)));
-            let h = "", t = 0; snap.forEach(d => { t += d.data().jumla; h += `<div class="item-row"><span>${d.data().bidhaa}</span><b>${d.data().jumla.toLocaleString()}</b></div>`; });
+            let h = "", t = 0, pVal = 0; snap.forEach(d => { const da = d.data(); t += da.jumla; pVal += da.profit; h += `<div class="item-row"><span>${da.bidhaa}</span><b>${da.jumla.toLocaleString()}</b></div>`; });
             document.getElementById('repT').innerText = "Tsh " + t.toLocaleString();
+            if(isAdmin) document.getElementById('repP').innerText = "Tsh " + pVal.toLocaleString();
             document.getElementById('listReports').innerHTML = h || "Hamna kitu";
         };
         window.setHali = async (h) => { await updateDoc(doc(db, "maduka", curID), { hali: h }); };
         window.doKopa = async () => { await addDoc(collection(db, "maduka", curID, "madeni"), { jina: document.getElementById('dJina').value, kitu: document.getElementById('dKitu').value, kiasi: Number(document.getElementById('dKiasi').value) }); alert("Save!"); };
         window.doStaff = async () => { await setDoc(doc(db, "maduka", curID, "staff", document.getElementById('stfJina').value.toLowerCase().trim()), { siri: document.getElementById('stfPass').value }); alert("Staff OK!"); };
+        window.delDeni = async (id) => { if(confirm("Lipa?")) await deleteDoc(doc(db, "maduka", curID, "madeni", id)); };
+        window.delStaff = async (id) => { if(confirm("Futa?")) await deleteDoc(doc(db, "maduka", curID, "staff", id)); };
         window.updatePrice = () => { const j = document.getElementById('uJina').value; for(let id in curStock) { if(curStock[id].bidhaa === j) { document.getElementById('uBei').value = curStock[id].beiS; break; } } };
         window.switchTab = (t) => { ['mauzo','stock','madeni','reports','staff','support'].forEach(id => { document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1)).classList.toggle('hidden', t !== id); document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1) + 'Btn').classList.toggle('active-tab', t === id); }); };
         window.handleRegister = async () => {
@@ -283,4 +249,4 @@
         };
     </script>
 </body>
-
+</html>
