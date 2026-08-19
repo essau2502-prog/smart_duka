@@ -10,7 +10,6 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3081/3081559.png">
 
     <script>
-        // Kusajili Service Worker ili iweze ku-install-ika
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
@@ -39,11 +38,12 @@
         .auth-page { position: fixed; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         .asset-summary { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.95rem; border-left: 5px solid #27ae60; }
         .item-info { display: flex; flex-direction: column; }
-        .item-val { font-size: 0.75rem; color: #27ae60; font-weight: bold; margin-top: 2px; }
-        .item-qty { font-size: 0.75rem; color: #7f8c8d; }
-        .no-stok-tag { font-size: 0.7rem; color: #e74c3c; font-style: italic; display: block; }
+        .item-val { font-size: 0.8rem; color: #27ae60; font-weight: bold; margin-top: 2px; }
+        .item-qty { font-size: 0.8rem; color: #7f8c8d; }
+        .no-stok-tag { font-size: 0.75rem; color: #e67e22; font-weight: bold; display: block; margin-top: 2px; }
         .alert-box { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 12px; border-radius: 5px; margin-bottom: 10px; font-size: 0.85rem; border-left: 5px solid #e67e22; }
         .low-stock-tag { color: #d35400; font-weight: bold; font-size: 0.75rem; }
+        .label-text { font-size: 0.85rem; font-weight: bold; color: #34495e; margin-top: 5px; display: block; }
     </style>
 </head>
 <body>
@@ -97,10 +97,16 @@
             <div id="stockNotification" class="alert-box hidden"></div>
             <div id="lockMsg" class="hidden" style="color:red; text-align:center;"><h3>DUKA LIMEFUNGWA 🔒</h3></div>
             <div id="formMauzo">
-                <input list="listB" id="uJina" placeholder="Tafuta bidhaa..." onchange="updatePrice()">
+                <span class="label-text">1. Aina ya Bidhaa:</span>
+                <input list="listB" id="uJina" placeholder="Andika au chagua bidhaa..." oninput="updatePrice()">
                 <datalist id="listB"></datalist>
-                <input type="number" id="uBei" placeholder="Bei">
-                <input type="number" id="uQty" value="1">
+
+                <span class="label-text">2. Bei ya Kuuza (Tsh):</span>
+                <input type="number" id="uBei" placeholder="Bei ya kuuza">
+
+                <span class="label-text">3. Idadi:</span>
+                <input type="number" id="uQty" value="1" placeholder="Idadi">
+
                 <button onclick="doUza()" class="btn-uza">FANYA MAUZO</button>
             </div>
             <hr>
@@ -109,15 +115,16 @@
 
         <div id="tabStock" class="hidden main-card">
             <div id="admStok" class="hidden">
-                <h4>Weka Mzigo</h4>
-                <input type="text" id="sJina" placeholder="Bidhaa">
-                <input type="number" id="sBkununua" placeholder="Bei Kununua">
-                <input type="number" id="sBkuuza" placeholder="Bei Kuuza">
-                <input type="number" id="sQty" placeholder="Idadi">
+                <h4>Weka Mzigo Mpya kwenye Stok</h4>
+                <input type="text" id="sJina" placeholder="Jina la Bidhaa">
+                <input type="number" id="sBkununua" placeholder="Bei ya Kununua (Mtaji)">
+                <input type="number" id="sBkuuza" placeholder="Bei ya Kuuza">
+                <input type="number" id="sQty" placeholder="Idadi/Stok">
                 <input type="number" id="sLimit" placeholder="Kiwango cha Tahadhari (Default: 10)">
                 <button onclick="doStok()" class="btn-primary">HIFADHI STOK</button>
                 <hr>
             </div>
+            <h4>Orodha ya Stok</h4>
             <div id="listStok"></div>
             <div id="stockSummary" class="asset-summary hidden"></div>
         </div>
@@ -232,14 +239,15 @@
 
                 snap.forEach(d => {
                     const data = d.data(); curStock[d.id] = data;
-                    let q = data.qty || 0;
-                    let bB = data.beiB || 0;
-                    let bS = data.beiS || 0;
-                    let limit = data.alertLimit !== undefined ? data.alertLimit : 10;
+                    let q = Number(data.qty || 0);
+                    let bB = Number(data.beiB || 0);
+                    let bS = Number(data.beiS || 0);
+                    let faidaMmoja = bS - bB;
+                    let limit = data.alertLimit !== undefined ? Number(data.alertLimit) : 10;
                     let mmojaMtaji = bB * q;
 
                     tCost += mmojaMtaji;
-                    tProf += ((bS - bB) * q);
+                    tProf += (faidaMmoja * q);
 
                     let isLow = q <= limit;
                     if(isLow) {
@@ -248,21 +256,23 @@
 
                     h += `<div class="item-row">
                             <div class="item-info">
-                                <b>${data.bidhaa}</b>
-                                <span class="item-qty">Stok: ${q} ${isLow ? `<span class="low-stock-tag">⚠️ Karibu Kuisha!</span>` : ''}</span>
-                                ${isAdmin ? `<span class="item-val">Mtaji: ${mmojaMtaji.toLocaleString()}</span>` : ''}
+                                <b style="font-size:1.05rem;">${data.bidhaa}</b>
+                                <span class="item-qty">Stok Iliyobaki: <b>${q}</b> ${isLow ? `<span class="low-stock-tag">⚠️ Karibu Kuisha!</span>` : ''}</span>
+                                <span style="font-size:0.8rem; color:#34495e; margin-top:3px;">
+                                    Kununua: <b>Tsh ${bB.toLocaleString()}</b> | Kuuza: <b>Tsh ${bS.toLocaleString()}</b>
+                                </span>
+                                ${isAdmin ? `<span class="item-val">Faida/Kitu: Tsh ${faidaMmoja.toLocaleString()} | Mtaji Waliofungwa: Tsh ${mmojaMtaji.toLocaleString()}</span>` : ''}
                             </div>
                             <div style="text-align:right">
-                                <b>${bS.toLocaleString()}</b><br>
-                                <button onclick="delStok('${d.id}')" class="btn-futa" style="margin-top:5px; ${isAdmin ? '' : 'display:none'}">Futa</button>
+                                <button onclick="delStok('${d.id}')" class="btn-futa" style="${isAdmin ? '' : 'display:none'}">Futa</button>
                             </div>
                           </div>`;
                     opts += `<option value="${data.bidhaa}">`;
                 });
 
-                document.getElementById('listStok').innerHTML = h; document.getElementById('listB').innerHTML = opts;
+                document.getElementById('listStok').innerHTML = h || "Hamna bidhaa kwenye stok"; 
+                document.getElementById('listB').innerHTML = opts;
                 
-                // Alert Box kwa Mwenye Duka au Muuzaji
                 const notifBox = document.getElementById('stockNotification');
                 if(lowStockAlerts.length > 0) {
                     notifBox.classList.remove('hidden');
@@ -273,11 +283,11 @@
 
                 if(isAdmin) {
                     document.getElementById('stockSummary').innerHTML = `
-                        <strong>JUMLA KUU YA STOK:</strong><br>
+                        <strong>JUMLA KUU YA STOK DUKANI:</strong><br>
                         • Thamani ya Mtaji: <span style="float:right">Tsh ${tCost.toLocaleString()}</span><br>
                         • Faida Tarajiwa: <span style="float:right">Tsh ${tProf.toLocaleString()}</span><br>
                         <div style="margin-top:8px; padding-top:5px; border-top:1px solid #7f8c8d; color:#2ecc71; font-weight:bold;">
-                            Jumla ya Duka: <span style="float:right">Tsh ${(tCost + tProf).toLocaleString()}</span>
+                            Jumla ya Thamani: <span style="float:right">Tsh ${(tCost + tProf).toLocaleString()}</span>
                         </div>
                     `;
                 }
@@ -287,15 +297,18 @@
                 let t = 0, p = 0, h = "";
                 snap.forEach(d => { 
                     const data = d.data();
-                    t += data.jumla; 
-                    p += data.profit; 
-                    let noStokMsg = data.isRecordedInStock === false ? `<span class="no-stok-tag">(Haijarecordiwa kwenye stok)</span>` : '';
+                    t += Number(data.jumla || 0); 
+                    p += Number(data.profit || 0); 
+                    let noStokMsg = data.isRecordedInStock === false ? `<span class="no-stok-tag">⚠️ (Haija-recordiwa kwenye Stok)</span>` : '';
                     let delBtnHtml = isAdmin ? `<button onclick="delMauzo('${d.id}')" class="btn-futa" style="margin-left:8px;">Futa</button>` : '';
 
                     h += `<div class="item-row">
-                            <span><b>${data.bidhaa}</b> (${data.qty || 1})${noStokMsg}</span>
                             <div>
-                                <b>Tsh ${data.jumla.toLocaleString()}</b>
+                                <b>${data.bidhaa}</b> (Idadi: ${data.qty || 1})
+                                ${noStokMsg}
+                            </div>
+                            <div style="text-align:right;">
+                                <b>Tsh ${Number(data.jumla).toLocaleString()}</b>
                                 ${delBtnHtml}
                             </div>
                           </div>`; 
@@ -315,18 +328,34 @@
             });
         }
 
+        window.updatePrice = () => {
+            const j = document.getElementById('uJina').value.trim();
+            for(let id in curStock) {
+                if(curStock[id].bidhaa.toLowerCase() === j.toLowerCase()) {
+                    document.getElementById('uBei').value = curStock[id].beiS;
+                    break;
+                }
+            }
+        };
+
         window.doUza = async () => {
             const j = document.getElementById('uJina').value.trim(), b = Number(document.getElementById('uBei').value), q = Number(document.getElementById('uQty').value);
             if(!j || b <= 0 || q <= 0) { alert("Tafadhali weka jina, bei na idadi sahihi!"); return; }
             
             let prof = 0, bID = null, isRecorded = false;
+
             for(let id in curStock) { 
                 if(curStock[id].bidhaa.toLowerCase() === j.toLowerCase()) { 
-                    prof = (b - curStock[id].beiB) * q; 
+                    let beiKununua = Number(curStock[id].beiB || 0);
+                    prof = (b - beiKununua) * q; 
                     bID = id; 
                     isRecorded = true;
                     break; 
                 } 
+            }
+
+            if(!isRecorded) {
+                prof = 0; 
             }
 
             await addDoc(collection(db, "mauzo"), { 
@@ -341,12 +370,12 @@
             });
 
             if(bID) {
-                let newQty = curStock[bID].qty - q;
+                let newQty = Number(curStock[bID].qty || 0) - q;
                 await updateDoc(doc(db, "maduka", curID, "stok", bID), { qty: newQty });
                 
-                let limit = curStock[bID].alertLimit !== undefined ? curStock[bID].alertLimit : 10;
+                let limit = curStock[bID].alertLimit !== undefined ? Number(curStock[bID].alertLimit) : 10;
                 if(newQty <= limit) {
-                    alert(`⚠️ TAHADHARI: Mzigo wa ${j} umebaki ${newQty}! Unakaribia kuisha.`);
+                    alert(`⚠️ TAHADHARI: Stok ya ${j} imebaki ${newQty}! Unakaribia kuisha.`);
                 }
             }
 
@@ -365,7 +394,7 @@
                     if(mData.stockID) {
                         const sDoc = await getDoc(doc(db, "maduka", curID, "stok", mData.stockID));
                         if(sDoc.exists()) {
-                            await updateDoc(doc(db, "maduka", curID, "stok", mData.stockID), { qty: (sDoc.data().qty || 0) + (mData.qty || 1) });
+                            await updateDoc(doc(db, "maduka", curID, "stok", mData.stockID), { qty: Number(sDoc.data().qty || 0) + Number(mData.qty || 1) });
                         }
                     }
                     await deleteDoc(doc(db, "mauzo", mauzoID));
@@ -375,28 +404,34 @@
         };
 
         window.doStok = async () => {
-            const j = document.getElementById('sJina').value, bB = Number(document.getElementById('sBkununua').value), bS = Number(document.getElementById('sBkuuza').value), q = Number(document.getElementById('sQty').value);
+            const j = document.getElementById('sJina').value.trim(), bB = Number(document.getElementById('sBkununua').value), bS = Number(document.getElementById('sBkuuza').value), q = Number(document.getElementById('sQty').value);
             const limitVal = document.getElementById('sLimit').value;
             const limit = limitVal !== '' ? Number(limitVal) : 10;
 
-            if(j) { 
-                const id = j.toLowerCase().replace(/\s/g, '_'); 
-                await setDoc(doc(db, "maduka", curID, "stok", id), { 
-                    bidhaa: j, 
-                    beiB: bB, 
-                    beiS: bS, 
-                    qty: q,
-                    alertLimit: limit
-                }); 
-                alert("Stok Imesave!"); 
-            }
+            if(!j || bS <= 0 || q < 0) { alert("Weka maelezo sahihi ya stok!"); return; }
+
+            const id = j.toLowerCase().replace(/\s/g, '_'); 
+            await setDoc(doc(db, "maduka", curID, "stok", id), { 
+                bidhaa: j, 
+                beiB: bB, 
+                beiS: bS, 
+                qty: q,
+                alertLimit: limit
+            }); 
+            
+            document.getElementById('sJina').value = '';
+            document.getElementById('sBkununua').value = '';
+            document.getElementById('sBkuuza').value = '';
+            document.getElementById('sQty').value = '';
+            document.getElementById('sLimit').value = '';
+            alert("Stok Imesave!"); 
         };
 
         window.fetchReports = async () => {
             const rd = document.getElementById('repDate').value; if(!rd) return;
             const p = rd.split('-'); const td = `${p[2]}/${p[1]}/${p[0]}`;
             const snap = await getDocs(query(collection(db, "mauzo"), where("dukaID", "==", curID), where("tarehe", "==", td)));
-            let h = "", t = 0, pVal = 0; snap.forEach(d => { const da = d.data(); t += da.jumla; pVal += da.profit; h += `<div class="item-row"><span>${da.bidhaa}</span><b>${da.jumla.toLocaleString()}</b></div>`; });
+            let h = "", t = 0, pVal = 0; snap.forEach(d => { const da = d.data(); t += Number(da.jumla || 0); pVal += Number(da.profit || 0); h += `<div class="item-row"><span>${da.bidhaa} (${da.qty || 1})</span><b>Tsh ${Number(da.jumla).toLocaleString()}</b></div>`; });
             document.getElementById('repT').innerText = "Tsh " + t.toLocaleString();
             if(isAdmin) document.getElementById('repP').innerText = "Tsh " + pVal.toLocaleString();
             document.getElementById('listReports').innerHTML = h || "Hamna mauzo kwenye tarehe hii";
@@ -415,8 +450,8 @@
                         const dMonth = parts[1];
                         const dYear = parts[2];
                         if(dMonth === month && dYear === year) {
-                            t += da.jumla;
-                            pVal += da.profit;
+                            t += Number(da.jumla || 0);
+                            pVal += Number(da.profit || 0);
                         }
                     }
                 }
@@ -436,7 +471,6 @@
         window.delDeni = async (id) => { if(confirm("Lipa?")) await deleteDoc(doc(db, "maduka", curID, "madeni", id)); };
         window.delStaff = async (id) => { if(confirm("Futa?")) await deleteDoc(doc(db, "maduka", curID, "staff", id)); };
         window.delStok = async (id) => { if(confirm("Futa bidhaa hii kabisa?")) await deleteDoc(doc(db, "maduka", curID, "stok", id)); };
-        window.updatePrice = () => { const j = document.getElementById('uJina').value; for(let id in curStock) { if(curStock[id].bidhaa === j) { document.getElementById('uBei').value = curStock[id].beiS; break; } } };
         window.switchTab = (t) => { ['mauzo','stock','madeni','reports','staff','support'].forEach(id => { document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1)).classList.toggle('hidden', t !== id); document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1) + 'Btn').classList.toggle('active-tab', t === id); }); };
         window.handleRegister = async () => {
             const id = document.getElementById('regDukaID').value.toLowerCase().trim();
