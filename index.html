@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Duka Pro v9.6</title>
+    <title>Smart Duka Pro v9.7</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
@@ -30,6 +30,7 @@
         .btn-uza { background: #27ae60; color: white; }
         .btn-kopa { background: #e67e22; color: white; }
         .btn-futa { background: #e74c3c; color: white; padding: 5px 10px; width: auto; font-size: 0.8rem; }
+        .btn-edit { background: #3498db; color: white; padding: 5px 10px; width: auto; font-size: 0.8rem; margin-right: 5px; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
         .tab-bar { display: flex; overflow-x: auto; padding: 10px; gap: 5px; background: #fff; border-bottom: 1px solid #ddd; }
         .tab-btn { padding: 10px 15px; background: #bdc3c7; border-radius: 5px; white-space: nowrap; flex-shrink: 0; font-size: 0.8rem; }
@@ -115,13 +116,14 @@
 
         <div id="tabStock" class="hidden main-card">
             <div id="admStok" class="hidden">
-                <h4>Weka Mzigo Mpya kwenye Stok</h4>
+                <h4 id="stokTitle">Weka Mzigo Mpya / Ongeza Stok</h4>
                 <input type="text" id="sJina" placeholder="Jina la Bidhaa (mfano: Mchele)">
                 <input type="number" id="sBkununua" placeholder="Bei ya Kununua (Mtaji)">
                 <input type="number" id="sBkuuza" placeholder="Bei ya Kuuza">
-                <input type="number" id="sQty" placeholder="Idadi/Stok">
+                <input type="number" id="sQty" placeholder="Idadi/Stok ya Kuongeza">
                 <input type="number" id="sLimit" placeholder="Kiwango cha Tahadhari (Default: 10)">
-                <button onclick="doStok()" class="btn-primary">HIFADHI STOK</button>
+                <button onclick="doStok()" id="btnStokSave" class="btn-primary">HIFADHI STOK</button>
+                <button onclick="cancelEdit()" id="btnStokCancel" class="btn-futa hidden" style="width:100%; margin-top:5px;">GHAIRISHI MAREKEBISHO</button>
                 <hr>
             </div>
             <h4>Orodha ya Stok</h4>
@@ -192,6 +194,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         let curID = null, isAdmin = false, curUser = "", curStock = {};
+        let isEditMode = false;
         let leo = new Date().toLocaleDateString('en-GB');
 
         window.toggleAuth = () => { document.getElementById('loginForm').classList.toggle('hidden'); document.getElementById('registerForm').classList.toggle('hidden'); };
@@ -273,6 +276,7 @@
                                 ${isAdmin ? `<span class="item-val">Faida/Kitu: Tsh ${faidaKilaMoja.toLocaleString()} | Faida Yote Mzigo Ukiisha: Tsh ${faidaJumlaBidhaa.toLocaleString()}</span>` : ''}
                             </div>
                             <div style="text-align:right">
+                                ${isAdmin ? `<button onclick="editStok('${d.id}')" class="btn-edit">Edit</button>` : ''}
                                 <button onclick="delStok('${d.id}')" class="btn-futa" style="${isAdmin ? '' : 'display:none'}">Futa</button>
                             </div>
                           </div>`;
@@ -351,9 +355,6 @@
                     break;
                 }
             }
-            if(!found) {
-                // Kama haipo kwenye stok
-            }
         };
 
         window.doUza = async () => {
@@ -423,28 +424,76 @@
             }
         };
 
+        // FUNCTION YA KUWEKA / KUBADILISHA STOK
         window.doStok = async () => {
-            const j = document.getElementById('sJina').value.trim(), bB = Number(document.getElementById('sBkununua').value), bS = Number(document.getElementById('sBkuuza').value), q = Number(document.getElementById('sQty').value);
+            const j = document.getElementById('sJina').value.trim();
+            const bB = Number(document.getElementById('sBkununua').value);
+            const bS = Number(document.getElementById('sBkuuza').value);
+            const q = Number(document.getElementById('sQty').value || 0);
             const limitVal = document.getElementById('sLimit').value;
             const limit = limitVal !== '' ? Number(limitVal) : 10;
 
-            if(!j || bS <= 0 || q < 0) { alert("Weka maelezo sahihi ya stok!"); return; }
+            if(!j || bS <= 0) { alert("Weka maelezo sahihi ya jina na bei ya kuuza!"); return; }
 
-            const id = j.toLowerCase().replace(/\s/g, '_'); 
+            const id = j.toLowerCase().replace(/\s+/g, '_'); 
+            const existingDoc = await getDoc(doc(db, "maduka", curID, "stok", id));
+
+            let finalQty = q;
+            if (existingDoc.exists()) {
+                if (isEditMode) {
+                    // Ukipata mode ya Edit, inachukua idadi iliyoandikwa kama mpya
+                    finalQty = q;
+                } else {
+                    // Kama unaongeza mzigo wa kawaida, INAJUMLISHA na ya zamani!
+                    const oldQty = Number(existingDoc.data().qty || 0);
+                    finalQty = oldQty + q;
+                }
+            }
+
             await setDoc(doc(db, "maduka", curID, "stok", id), { 
                 bidhaa: j, 
                 beiB: bB, 
                 beiS: bS, 
-                qty: q,
+                qty: finalQty,
                 alertLimit: limit
             }); 
             
+            cancelEdit();
+            alert(`Stok imehifadhiwa kikamilifu! Jumla ya ${j} sasa ni ${finalQty}`); 
+        };
+
+        // FUNCTION YA KUANDAA EDIT STOK
+        window.editStok = (id) => {
+            const item = curStock[id];
+            if(!item) return;
+
+            document.getElementById('sJina').value = item.bidhaa;
+            document.getElementById('sJina').disabled = true; // Haturuhusu kubadili jina la ID
+            document.getElementById('sBkununua').value = item.beiB;
+            document.getElementById('sBkuuza').value = item.beiS;
+            document.getElementById('sQty').value = item.qty;
+            document.getElementById('sLimit').value = item.alertLimit !== undefined ? item.alertLimit : 10;
+
+            document.getElementById('stokTitle').innerText = "Badilisha Bei au Stok ya " + item.bidhaa;
+            document.getElementById('btnStokSave').innerText = "MEREKEBISHO YA HIFADHI";
+            document.getElementById('btnStokCancel').classList.remove('hidden');
+            
+            isEditMode = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.cancelEdit = () => {
             document.getElementById('sJina').value = '';
+            document.getElementById('sJina').disabled = false;
             document.getElementById('sBkununua').value = '';
             document.getElementById('sBkuuza').value = '';
             document.getElementById('sQty').value = '';
             document.getElementById('sLimit').value = '';
-            alert("Stok Imesave!"); 
+
+            document.getElementById('stokTitle').innerText = "Weka Mzigo Mpya / Ongeza Stok";
+            document.getElementById('btnStokSave').innerText = "HIFADHI STOK";
+            document.getElementById('btnStokCancel').classList.add('hidden');
+            isEditMode = false;
         };
 
         window.fetchReports = async () => {
