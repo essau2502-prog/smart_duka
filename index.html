@@ -41,6 +41,7 @@
         .item-info { display: flex; flex-direction: column; }
         .item-val { font-size: 0.75rem; color: #27ae60; font-weight: bold; margin-top: 2px; }
         .item-qty { font-size: 0.75rem; color: #7f8c8d; }
+        .no-stok-tag { font-size: 0.7rem; color: #e74c3c; font-style: italic; display: block; }
     </style>
 </head>
 <body>
@@ -118,7 +119,7 @@
         </div>
 
         <div id="tabReports" class="main-card hidden">
-            <h4>Ripoti za Mauzo</h4>
+            <h4>Ripoti za Siku</h4>
             <input type="date" id="repDate" onchange="fetchReports()">
             <div id="repSummary" style="margin-top:10px;">
                 <div style="background:#f9f9f9; padding:10px; border-radius:5px;">Mauzo: <b id="repT">0</b></div>
@@ -126,6 +127,14 @@
             </div>
             <hr>
             <div id="listReports"></div>
+
+            <hr style="margin-top: 20px; margin-bottom: 20px;">
+            <h4>Ripoti ya Mwezi (Mwenye Duka)</h4>
+            <input type="month" id="repMonth" onchange="fetchMonthlyReports()">
+            <div id="monthRepSummary" style="margin-top:10px;">
+                <div style="background:#e8f8f5; padding:10px; border-radius:5px;">Mauzo ya Mwezi: <b id="repMT">0</b></div>
+                <div style="background:#e8f8f5; padding:10px; border-radius:5px; margin-top:5px;" id="repMPBox">Faida ya Mwezi: <b id="repMP">0</b></div>
+            </div>
         </div>
 
         <div id="tabMadeni" class="hidden main-card">
@@ -214,6 +223,7 @@
             onSnapshot(collection(db, "maduka", curID, "stok"), (snap) => {
                 let h = "", opts = ""; 
                 let tCost = 0, tProf = 0;
+                curStock = {};
                 snap.forEach(d => {
                     const data = d.data(); curStock[d.id] = data;
                     let q = data.qty || 0;
@@ -253,10 +263,24 @@
 
             onSnapshot(query(collection(db, "mauzo"), where("dukaID", "==", curID), where("tarehe", "==", leo)), (snap) => {
                 let t = 0, p = 0, h = "";
-                snap.forEach(d => { t += d.data().jumla; p += d.data().profit; h += `<div class="item-row"><span>${d.data().bidhaa}</span><b>${d.data().jumla.toLocaleString()}</b></div>`; });
+                snap.forEach(d => { 
+                    const data = d.data();
+                    t += data.jumla; 
+                    p += data.profit; 
+                    let noStokMsg = data.isRecordedInStock === false ? `<span class="no-stok-tag">(Haijarecordiwa kwenye stok)</span>` : '';
+                    let delBtnHtml = isAdmin ? `<button onclick="delMauzo('${d.id}')" class="btn-futa" style="margin-left:8px;">Futa</button>` : '';
+
+                    h += `<div class="item-row">
+                            <span><b>${data.bidhaa}</b> (${data.qty || 1})${noStokMsg}</span>
+                            <div>
+                                <b>Tsh ${data.jumla.toLocaleString()}</b>
+                                ${delBtnHtml}
+                            </div>
+                          </div>`; 
+                });
                 document.getElementById('valTotal').innerText = t.toLocaleString();
                 if(isAdmin) document.getElementById('valProfit').innerText = "Faida Leo: Tsh " + p.toLocaleString();
-                document.getElementById('listMauzo').innerHTML = h;
+                document.getElementById('listMauzo').innerHTML = h || "Hamna mauzo yaliyofanyika leo";
             });
 
             onSnapshot(collection(db, "maduka", curID, "madeni"), (snap) => {
@@ -270,18 +294,63 @@
         }
 
         window.doUza = async () => {
-            const j = document.getElementById('uJina').value, b = Number(document.getElementById('uBei').value), q = Number(document.getElementById('uQty').value);
-            if(!j || b <= 0) return;
-            let prof = 0, bID = null;
-            for(let id in curStock) { if(curStock[id].bidhaa.toLowerCase() === j.toLowerCase()) { prof = (b - curStock[id].beiB) * q; bID = id; break; } }
-            await addDoc(collection(db, "mauzo"), { bidhaa: j, qty: q, jumla: b*q, profit: prof, dukaID: curID, tarehe: leo });
-            if(bID) await updateDoc(doc(db, "maduka", curID, "stok", bID), { qty: curStock[bID].qty - q });
+            const j = document.getElementById('uJina').value.trim(), b = Number(document.getElementById('uBei').value), q = Number(document.getElementById('uQty').value);
+            if(!j || b <= 0 || q <= 0) { alert("Tafadhali weka jina, bei na idadi sahihi!"); return; }
+            
+            let prof = 0, bID = null, isRecorded = false;
+            for(let id in curStock) { 
+                if(curStock[id].bidhaa.toLowerCase() === j.toLowerCase()) { 
+                    prof = (b - curStock[id].beiB) * q; 
+                    bID = id; 
+                    isRecorded = true;
+                    break; 
+                } 
+            }
+
+            await addDoc(collection(db, "mauzo"), { 
+                bidhaa: j, 
+                qty: q, 
+                jumla: b * q, 
+                profit: prof, 
+                dukaID: curID, 
+                tarehe: leo,
+                isRecordedInStock: isRecorded,
+                stockID: bID
+            });
+
+            if(bID) {
+                await updateDoc(doc(db, "maduka", curID, "stok", bID), { qty: curStock[bID].qty - q });
+            }
+
+            document.getElementById('uJina').value = '';
+            document.getElementById('uBei').value = '';
+            document.getElementById('uQty').value = '1';
             alert("Umeuza!");
         };
+
+        window.delMauzo = async (mauzoID) => {
+            if(!isAdmin) { alert("Admin pekee ndiye anayeweza kufuta mauzo!"); return; }
+            if(confirm("Unahakika unataka kufuta mauzo haya?")) {
+                const mDoc = await getDoc(doc(db, "mauzo", mauzoID));
+                if(mDoc.exists()) {
+                    const mData = mDoc.data();
+                    if(mData.stockID) {
+                        const sDoc = await getDoc(doc(db, "maduka", curID, "stok", mData.stockID));
+                        if(sDoc.exists()) {
+                            await updateDoc(doc(db, "maduka", curID, "stok", mData.stockID), { qty: (sDoc.data().qty || 0) + (mData.qty || 1) });
+                        }
+                    }
+                    await deleteDoc(doc(db, "mauzo", mauzoID));
+                    alert("Mauzo yamefutwa kikamilifu!");
+                }
+            }
+        };
+
         window.doStok = async () => {
             const j = document.getElementById('sJina').value, bB = Number(document.getElementById('sBkununua').value), bS = Number(document.getElementById('sBkuuza').value), q = Number(document.getElementById('sQty').value);
             if(j) { const id = j.toLowerCase().replace(/\s/g, '_'); await setDoc(doc(db, "maduka", curID, "stok", id), { bidhaa: j, beiB: bB, beiS: bS, qty: q }); alert("Stok Imesave!"); }
         };
+
         window.fetchReports = async () => {
             const rd = document.getElementById('repDate').value; if(!rd) return;
             const p = rd.split('-'); const td = `${p[2]}/${p[1]}/${p[0]}`;
@@ -289,8 +358,37 @@
             let h = "", t = 0, pVal = 0; snap.forEach(d => { const da = d.data(); t += da.jumla; pVal += da.profit; h += `<div class="item-row"><span>${da.bidhaa}</span><b>${da.jumla.toLocaleString()}</b></div>`; });
             document.getElementById('repT').innerText = "Tsh " + t.toLocaleString();
             if(isAdmin) document.getElementById('repP').innerText = "Tsh " + pVal.toLocaleString();
-            document.getElementById('listReports').innerHTML = h || "Hamna kitu";
+            document.getElementById('listReports').innerHTML = h || "Hamna mauzo kwenye tarehe hii";
         };
+
+        window.fetchMonthlyReports = async () => {
+            const ym = document.getElementById('repMonth').value; if(!ym) return;
+            const [year, month] = ym.split('-');
+            const snap = await getDocs(query(collection(db, "mauzo"), where("dukaID", "==", curID)));
+            let t = 0, pVal = 0;
+            snap.forEach(d => {
+                const da = d.data();
+                if(da.tarehe) {
+                    const parts = da.tarehe.split('/');
+                    if(parts.length === 3) {
+                        const dMonth = parts[1];
+                        const dYear = parts[2];
+                        if(dMonth === month && dYear === year) {
+                            t += da.jumla;
+                            pVal += da.profit;
+                        }
+                    }
+                }
+            });
+            document.getElementById('repMT').innerText = "Tsh " + t.toLocaleString();
+            if(isAdmin) {
+                document.getElementById('repMPBox').style.display = 'block';
+                document.getElementById('repMP').innerText = "Tsh " + pVal.toLocaleString();
+            } else {
+                document.getElementById('repMPBox').style.display = 'none';
+            }
+        };
+
         window.setHali = async (h) => { await updateDoc(doc(db, "maduka", curID), { hali: h }); };
         window.doKopa = async () => { await addDoc(collection(db, "maduka", curID, "madeni"), { jina: document.getElementById('dJina').value, kitu: document.getElementById('dKitu').value, kiasi: Number(document.getElementById('dKiasi').value) }); alert("Save!"); };
         window.doStaff = async () => { await setDoc(doc(db, "maduka", curID, "staff", document.getElementById('stfJina').value.toLowerCase().trim()), { siri: document.getElementById('stfPass').value }); alert("Staff OK!"); };
