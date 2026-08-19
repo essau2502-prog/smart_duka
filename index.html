@@ -98,7 +98,7 @@
             <div id="lockMsg" class="hidden" style="color:red; text-align:center;"><h3>DUKA LIMEFUNGWA 🔒</h3></div>
             <div id="formMauzo">
                 <span class="label-text">1. Chagua / Andika Bidhaa:</span>
-                <input list="listB" id="uJina" placeholder="Tafuta bidhaa..." onchange="updatePrice()" onkeyup="updatePrice()">
+                <input list="listB" id="uJina" placeholder="Tafuta bidhaa..." oninput="updatePrice()" onchange="updatePrice()">
                 <datalist id="listB"></datalist>
 
                 <span class="label-text">2. Bei ya Kuuza (Tsh):</span>
@@ -208,10 +208,16 @@
                 document.getElementById('admStok').classList.remove('hidden');
                 document.getElementById('admStaff').classList.remove('hidden');
                 document.getElementById('stockSummary').classList.remove('hidden');
+                document.getElementById('valProfit').style.display = 'block';
                 loginOk(dId, snap.data().name);
             } else {
                 const sSnap = await getDoc(doc(db, "maduka", dId, "staff", u));
-                if(sSnap.exists() && sSnap.data().siri === p) { isAdmin = false; curUser = u; loginOk(dId, snap.data().name); }
+                if(sSnap.exists() && sSnap.data().siri === p) { 
+                    isAdmin = false; 
+                    curUser = u; 
+                    document.getElementById('valProfit').style.display = 'none';
+                    loginOk(dId, snap.data().name); 
+                }
                 else { alert("Login imefeli!"); }
             }
         };
@@ -231,7 +237,7 @@
                 st.innerText = d.data().hali; st.style.background = d.data().hali === 'Wazi' ? '#2ecc71' : '#e74c3c';
             });
 
-            // Tracking Stok LIVE
+            // Live Stock Tracker
             onSnapshot(collection(db, "maduka", curID, "stok"), (snap) => {
                 let h = "", opts = ""; 
                 let tCost = 0, tProf = 0;
@@ -296,7 +302,7 @@
                 }
             });
 
-            // Tracking Mauzo LIVE na Hesabu za Faida
+            // Live Sales Tracker
             onSnapshot(query(collection(db, "mauzo"), where("dukaID", "==", curID), where("tarehe", "==", leo)), (snap) => {
                 let t = 0, p = 0, h = "";
                 snap.forEach(d => { 
@@ -332,15 +338,21 @@
             });
         }
 
-        // Kujaza bei kiatomati hata kama mtumiaji ameandika kwa herufi ndogo au kubwa
+        // AUTO FILL BEI WAKATI WA KUANDIKA
         window.updatePrice = () => {
-            const j = document.getElementById('uJina').value.trim().toLowerCase();
-            if(!j) return;
+            const inputVal = document.getElementById('uJina').value.trim().toLowerCase();
+            if(!inputVal) return;
+            
+            let found = false;
             for(let id in curStock) {
-                if(curStock[id].bidhaa.trim().toLowerCase() === j) {
+                if(curStock[id].bidhaa.trim().toLowerCase() === inputVal) {
                     document.getElementById('uBei').value = curStock[id].beiS;
+                    found = true;
                     break;
                 }
+            }
+            if(!found) {
+                // Kama haipo kwenye stok
             }
         };
 
