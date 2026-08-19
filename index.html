@@ -42,6 +42,8 @@
         .item-val { font-size: 0.75rem; color: #27ae60; font-weight: bold; margin-top: 2px; }
         .item-qty { font-size: 0.75rem; color: #7f8c8d; }
         .no-stok-tag { font-size: 0.7rem; color: #e74c3c; font-style: italic; display: block; }
+        .alert-box { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 12px; border-radius: 5px; margin-bottom: 10px; font-size: 0.85rem; border-left: 5px solid #e67e22; }
+        .low-stock-tag { color: #d35400; font-weight: bold; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -92,6 +94,7 @@
         </div>
 
         <div id="tabMauzo" class="main-card">
+            <div id="stockNotification" class="alert-box hidden"></div>
             <div id="lockMsg" class="hidden" style="color:red; text-align:center;"><h3>DUKA LIMEFUNGWA 🔒</h3></div>
             <div id="formMauzo">
                 <input list="listB" id="uJina" placeholder="Tafuta bidhaa..." onchange="updatePrice()">
@@ -111,6 +114,7 @@
                 <input type="number" id="sBkununua" placeholder="Bei Kununua">
                 <input type="number" id="sBkuuza" placeholder="Bei Kuuza">
                 <input type="number" id="sQty" placeholder="Idadi">
+                <input type="number" id="sLimit" placeholder="Kiwango cha Tahadhari (Default: 10)">
                 <button onclick="doStok()" class="btn-primary">HIFADHI STOK</button>
                 <hr>
             </div>
@@ -223,21 +227,29 @@
             onSnapshot(collection(db, "maduka", curID, "stok"), (snap) => {
                 let h = "", opts = ""; 
                 let tCost = 0, tProf = 0;
+                let lowStockAlerts = [];
                 curStock = {};
+
                 snap.forEach(d => {
                     const data = d.data(); curStock[d.id] = data;
                     let q = data.qty || 0;
                     let bB = data.beiB || 0;
                     let bS = data.beiS || 0;
+                    let limit = data.alertLimit !== undefined ? data.alertLimit : 10;
                     let mmojaMtaji = bB * q;
 
                     tCost += mmojaMtaji;
                     tProf += ((bS - bB) * q);
 
+                    let isLow = q <= limit;
+                    if(isLow) {
+                        lowStockAlerts.push(`<b>${data.bidhaa}</b> (Zimebaki: <b>${q}</b>)`);
+                    }
+
                     h += `<div class="item-row">
                             <div class="item-info">
                                 <b>${data.bidhaa}</b>
-                                <span class="item-qty">Stok: ${q}</span>
+                                <span class="item-qty">Stok: ${q} ${isLow ? `<span class="low-stock-tag">⚠️ Karibu Kuisha!</span>` : ''}</span>
                                 ${isAdmin ? `<span class="item-val">Mtaji: ${mmojaMtaji.toLocaleString()}</span>` : ''}
                             </div>
                             <div style="text-align:right">
@@ -247,8 +259,18 @@
                           </div>`;
                     opts += `<option value="${data.bidhaa}">`;
                 });
+
                 document.getElementById('listStok').innerHTML = h; document.getElementById('listB').innerHTML = opts;
                 
+                // Alert Box kwa Mwenye Duka au Muuzaji
+                const notifBox = document.getElementById('stockNotification');
+                if(lowStockAlerts.length > 0) {
+                    notifBox.classList.remove('hidden');
+                    notifBox.innerHTML = `⚠️ <strong>TAHADHARI YA STOK:</strong><br>Bidhaa zifuatazo zinakaribia kuisha:<br>• ` + lowStockAlerts.join('<br>• ');
+                } else {
+                    notifBox.classList.add('hidden');
+                }
+
                 if(isAdmin) {
                     document.getElementById('stockSummary').innerHTML = `
                         <strong>JUMLA KUU YA STOK:</strong><br>
@@ -319,7 +341,13 @@
             });
 
             if(bID) {
-                await updateDoc(doc(db, "maduka", curID, "stok", bID), { qty: curStock[bID].qty - q });
+                let newQty = curStock[bID].qty - q;
+                await updateDoc(doc(db, "maduka", curID, "stok", bID), { qty: newQty });
+                
+                let limit = curStock[bID].alertLimit !== undefined ? curStock[bID].alertLimit : 10;
+                if(newQty <= limit) {
+                    alert(`⚠️ TAHADHARI: Mzigo wa ${j} umebaki ${newQty}! Unakaribia kuisha.`);
+                }
             }
 
             document.getElementById('uJina').value = '';
@@ -348,7 +376,20 @@
 
         window.doStok = async () => {
             const j = document.getElementById('sJina').value, bB = Number(document.getElementById('sBkununua').value), bS = Number(document.getElementById('sBkuuza').value), q = Number(document.getElementById('sQty').value);
-            if(j) { const id = j.toLowerCase().replace(/\s/g, '_'); await setDoc(doc(db, "maduka", curID, "stok", id), { bidhaa: j, beiB: bB, beiS: bS, qty: q }); alert("Stok Imesave!"); }
+            const limitVal = document.getElementById('sLimit').value;
+            const limit = limitVal !== '' ? Number(limitVal) : 10;
+
+            if(j) { 
+                const id = j.toLowerCase().replace(/\s/g, '_'); 
+                await setDoc(doc(db, "maduka", curID, "stok", id), { 
+                    bidhaa: j, 
+                    beiB: bB, 
+                    beiS: bS, 
+                    qty: q,
+                    alertLimit: limit
+                }); 
+                alert("Stok Imesave!"); 
+            }
         };
 
         window.fetchReports = async () => {
