@@ -261,7 +261,7 @@
             // Live Stock Tracker
             onSnapshot(collection(db, "maduka", curID, "stok"), (snap) => {
                 let h = "", opts = ""; 
-                let tCost = 0, tProfExp = 0;
+                let tCost = 0, tProfExp = 0, tProfTotal = 0;
                 let lowStockAlerts = [];
                 curStock = {};
 
@@ -275,6 +275,9 @@
                     let faidaJumlaIliyobaki = faidaKilaMoja * q;
                     let limit = data.alertLimit !== undefined ? Number(data.alertLimit) : 10;
                     let mmojaMtaji = bB * q;
+
+                    let faidaMzigoMzima = faidaKilaMoja * q; 
+                    tProfTotal += faidaMzigoMzima;
 
                     tCost += mmojaMtaji;
                     tProfExp += faidaJumlaIliyobaki;
@@ -291,7 +294,10 @@
                                 <span style="font-size:0.8rem; color:#34495e; margin-top:3px;">
                                     Kununua: <b>Tsh ${bB.toLocaleString()}</b> | Kuuza: <b>Tsh ${bS.toLocaleString()}</b>
                                 </span>
-                                ${isAdmin ? `<span class="item-val">Faida Tarajiwa (Iliyobaki Shelf): Tsh ${faidaJumlaIliyobaki.toLocaleString()}</span>` : ''}
+                                ${isAdmin ? `
+                                    <span class="item-val">Faida Iliyobaki (Shelf): Tsh ${faidaJumlaIliyobaki.toLocaleString()}</span>
+                                    <span style="font-size:0.75rem; color:#2980b9; font-weight:bold;">Faida ya Ujumla (Mzigo Ukiisha): Tsh ${faidaMzigoMzima.toLocaleString()}</span>
+                                ` : ''}
                             </div>
                             <div style="text-align:right">
                                 ${isAdmin ? `<button onclick="editStok('${d.id}')" class="btn-edit">Edit</button>` : ''}
@@ -316,7 +322,8 @@
                     document.getElementById('stockSummary').innerHTML = `
                         <strong>THAMANI YA MZIGO ULIOBAKI DUKANI (SHELF):</strong><br>
                         • Thamani ya Mtaji Iliyobaki: <span style="float:right">Tsh ${tCost.toLocaleString()}</span><br>
-                        • Faida Tarajiwa (Mzigo Ukiisha): <span style="float:right">Tsh ${tProfExp.toLocaleString()}</span><br>
+                        • Faida Iliyobaki (Shelf): <span style="float:right">Tsh ${tProfExp.toLocaleString()}</span><br>
+                        • Faida ya Ujumla (Mzigo Mzima Ukiisha): <span style="float:right; color:#2980b9;">Tsh ${tProfTotal.toLocaleString()}</span><br>
                         <div style="margin-top:8px; padding-top:5px; border-top:1px solid #7f8c8d; color:#2ecc71; font-weight:bold;">
                             Jumla ya Thamani ya Stok Shelf: <span style="float:right">Tsh ${(tCost + tProfExp).toLocaleString()}</span>
                         </div>
@@ -405,7 +412,6 @@
             for(let id in curStock) { 
                 if(curStock[id].bidhaa.trim().toLowerCase() === jSearch) { 
                     let beiKununua = Number(curStock[id].beiB || 0);
-                    // Faida halisi = Malipo halisi - Mtaji wa hicho kipimo
                     let costForQty = beiKununua * q;
                     prof = totalPay - costForQty;
                     bID = id; 
@@ -426,11 +432,10 @@
                 stockID: bID
             });
 
-            // Punguza Kipimo halisi kwenye Stok (Mfano: -0.5 au -1)
             if(bID) {
                 let currentQty = Number(curStock[bID].qty || 0);
                 let newQty = currentQty - q;
-                if(newQty < 0) newQty = 0; // Kuzuia kuwa negative
+                if(newQty < 0) newQty = 0;
 
                 await updateDoc(doc(db, "maduka", curID, "stok", bID), { qty: newQty });
                 
